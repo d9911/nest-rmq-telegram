@@ -21,7 +21,10 @@ import {
   FileCode,
   Sparkles,
   Layers,
-  HelpCircle
+  HelpCircle,
+  Users,
+  Trash2,
+  Plus
 } from 'lucide-react'
 import { CODE_FILES, CodeFile } from './codefiles'
 
@@ -106,6 +109,79 @@ export default function App() {
   const [nackedCount, setNackedCount] = useState<number>(0)
   const [deadLetterCount, setDeadLetterCount] = useState<number>(0)
   const [telegramStatus, setTelegramStatus] = useState<'idle' | 'success' | 'failed' | 'simulated'>('idle')
+
+  // Subscribers session lists
+  const [subscribers, setSubscribers] = useState<any[]>([])
+  const [selectedChatIds, setSelectedChatIds] = useState<string[]>([])
+  const [newChatId, setNewChatId] = useState('')
+  const [newName, setNewName] = useState('')
+  const [isRegisteringSub, setIsRegisteringSub] = useState(false)
+
+  // Fetch subscribers list from backend
+  const fetchSubscribersList = async () => {
+    try {
+      const res = await fetch('/api/telegram/subscribers')
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success && Array.isArray(data.subscribers)) {
+          setSubscribers(data.subscribers)
+        }
+      }
+    } catch (err) {
+      // Ignore polling errors silently
+    }
+  }
+
+  // Handle manual recipient registration
+  const registerSubscriberManually = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newChatId.trim()) return
+    setIsRegisteringSub(true)
+    try {
+      const res = await fetch('/api/telegram/subscribers/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: newChatId.trim(),
+          name: newName.trim() || `User ${newChatId}`
+        })
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success) {
+          setSubscribers(data.subscribers)
+          addLog('System', 'success', `Manually registered Chat ID ${newChatId} inside the recipient roster!`)
+          setNewChatId('')
+          setNewName('')
+        }
+      }
+    } catch (err: any) {
+      addLog('System', 'error', `Failed to register chat ID manually: ${err.message || err}`)
+    } finally {
+      setIsRegisteringSub(false)
+    }
+  }
+
+  // Handle removing a subscriber from list
+  const deleteSubscriber = async (idToDelete: string) => {
+    try {
+      const res = await fetch('/api/telegram/subscribers/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: idToDelete })
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success) {
+          setSubscribers(data.subscribers)
+          setSelectedChatIds(prev => prev.filter(id => id !== idToDelete))
+          addLog('System', 'info', `Removed subscriber ${idToDelete} from the recipient dashboard.`)
+        }
+      }
+    } catch (err: any) {
+      addLog('System', 'error', `Failed to remove subscriber: ${err.message || err}`)
+    }
+  }
 
   // Save Config to Local Storage safely
   const saveTelegramConfig = (e: React.FormEvent) => {
@@ -269,45 +345,110 @@ export default function App() {
     )
   }
 
-  // 4. TELEGRAM NOTIFICATION DISPATCH (REAL OR SIMULATED)
+  // 4. TELEGRAM NOTIFICATION DISPATCH (REAL OR SIMULATED MULTI-RECEIVER BROADCAST)
   const triggerNotificationService = async (msg: SimulatedMessage) => {
     addLog('Notification', 'info', `Consuming alert request from notify_queue corresponding to processed task ID: ${msg.id}`)
     
-    const formattedText = `🔔 <b>${msg.title}</b>\n\n${msg.message}\n\n<i>ID: ${msg.id}\nTime: ${new Date().toLocaleTimeString()}</i>`
+    // We utilize the local /api/telegram/send endpoint to handle this securely with CORS bypass
+    const passedToken = tgConfig.token === 'SERVER_ENV_TOKEN_ACTIVE' ? '' : tgConfig.token
 
-    if (tgConfig.token && tgConfig.chatId) {
-      addLog('Notification', 'info', `Attempting LIVE Telegram Bot API hook callback delivery...`)
-      try {
-        const url = `https://api.telegram.org/bot${tgConfig.token}/sendMessage`
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            chat_id: tgConfig.chatId,
-            text: `🔔 *${msg.title}*\n\n${msg.message}\n\n_ID: ${msg.id}_`,
-            parse_mode: 'Markdown'
-          })
-        })
+    // Compile targets. Default to all selected checking checkboxes, otherwise fallback to standard default chatId setup
+    const activeTargets = selectedChatIds.length > 0
+      ? selectedChatIds
+      : subscribers.length > 0 
+        ? subscribers.map(s => s.id) 
+        : [tgConfig.chatId === 'SERVER_ENV_CHAT_ID_ACTIVE' ? '' : tgConfig.chatId].filter(id => id !== '');
 
-        if (!response.ok) {
-          throw new Error(`${response.statusText} (${response.status})`)
-        }
-
-        setTelegramStatus('success')
-        addLog('Notification', 'success', `✨ REAL Telegram notification successfully pushed to Chat ID ${tgConfig.chatId}!`)
-      } catch (error) {
-        setTelegramStatus('failed')
-        addLog('Notification', 'error', `Telegram API transport failure: ${error}`)
-      }
-    } else {
-      // In-app visual simulation
+    if (activeTargets.length === 0) {
       setTelegramStatus('simulated')
-      addLog('Notification', 'success', `Simulated Telegram alert sent successfully to Virtual Sandbox. Check Virtual Screen on the right!`)
+      addLog('Notification', 'info', `Sandbox preview: No active receivers found. Delivery simulated in virtual smartphone on right!`)
+      return;
+    }
+
+    addLog('Notification', 'info', `Dispatching real-time notifications to ${activeTargets.length} recipient(s)...`)
+
+    let successes = 0;
+    let errors: string[] = [];
+
+    for (const targetId of activeTargets) {
+      try {
+        const passedChatId = targetId === 'SERVER_ENV_CHAT_ID_ACTIVE' ? '' : targetId;
+        const response = await fetch('/api/telegram/send', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            token: passedToken,
+            chatId: passedChatId,
+            id: msg.id,
+            title: msg.title,
+            message: msg.message
+          })
+        });
+
+        if (response.ok) {
+          const outcome = await response.json();
+          if (outcome.delivered) {
+            successes += outcome.deliveredCount || 1;
+          } else {
+            errors.push(outcome.reason || 'Not delivered');
+          }
+        } else {
+          errors.push(`Status ${response.status}`);
+        }
+      } catch (err: any) {
+        errors.push(err.message || String(err));
+      }
+    }
+
+    if (successes > 0) {
+      setTelegramStatus('success')
+      addLog('Notification', 'success', `✨ LIVE Telegram alert delivered! Notification sent to ${successes} recipient(s) in chat! (UUID: ${msg.id})`)
+      fetchSubscribersList(); // Refresh their status
+    } else {
+      setTelegramStatus('failed')
+      addLog('Notification', 'error', `Delivery failed for all (${activeTargets.length}) recipients: ${errors.join(', ')}`)
     }
   }
 
   // Pre-seed some logs or mock data on mounting once
   useEffect(() => {
+    // Check server configuration for Telegram credentials
+    const checkServerConfig = async () => {
+      try {
+        const res = await fetch('/api/telegram/config')
+        if (res.ok) {
+          const cfg = await res.json()
+          if (cfg.hasServerToken) {
+            // If server-side API or polling detected a chat ID, grab it!
+            setTgConfig(prev => {
+              const newToken = prev.token || 'SERVER_ENV_TOKEN_ACTIVE';
+              const newChatId = prev.chatId || (cfg.chatIdVal ? cfg.chatIdVal : 'SERVER_ENV_CHAT_ID_ACTIVE');
+              
+              if (cfg.chatIdVal && prev.chatId !== cfg.chatIdVal && !subscribers.some(s => s.id === cfg.chatIdVal)) {
+                addLog('System', 'success', `✨ Получен числовой Chat ID от Telegram: ${cfg.chatIdVal}! Подключение установлено!`);
+              }
+              return {
+                token: newToken,
+                chatId: newChatId
+              };
+            });
+          }
+        }
+      } catch (err) {
+        // Fallback silently if server has not fully booted
+      }
+    }
+    
+    // Initial fetch
+    checkServerConfig()
+    fetchSubscribersList()
+
+    // Periodically poll every 3 seconds to catch live events or updates
+    const configInterval = setInterval(checkServerConfig, 3000);
+    const subInterval = setInterval(fetchSubscribersList, 3000);
+
     if (messages.length === 0) {
       // Create a pre-loaded successful transaction in history of visual board
       const historicalId = 'msg-701449-hist'
@@ -324,6 +465,11 @@ export default function App() {
       ])
       setSentCount(1)
       setAckedCount(1)
+    }
+
+    return () => {
+      clearInterval(configInterval);
+      clearInterval(subInterval);
     }
   }, [])
 
@@ -714,6 +860,124 @@ export default function App() {
                     <Send className="w-4 h-4" />
                     <span>Publish Event (POST request)</span>
                   </button>
+                </div>
+
+                {/* ACTIVE TELEGRAM SUBSCRIBERS ROSTER */}
+                <div className="bg-white border border-[#dddddd] rounded-xl shadow-sm p-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-semibold flex items-center space-x-2 text-[#0a2e0e]">
+                      <Users className="w-5 h-5" />
+                      <span>Live Active Receivers ({subscribers.length})</span>
+                    </h2>
+                    <span className="text-[11px] uppercase tracking-widest text-[#0a2e0e] bg-emerald-100 rounded px-2 py-0.5 font-bold">
+                      Polling Active
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-[#717680] leading-relaxed">
+                    Choose select recipients from the live registered sessions below. If nobody is ticked, the message broadcasts to <strong>everyone</strong> currently registered!
+                  </p>
+
+                  <div className="space-y-2.5 max-h-[220px] overflow-y-auto pr-1">
+                    {subscribers.length === 0 ? (
+                      <div className="p-4 border border-dashed border-[#dddddd] rounded-lg bg-gray-50 text-center space-y-1.5">
+                        <p className="text-xs text-semibold text-gray-400">No subscriber sessions found.</p>
+                        <p className="text-[11px] text-[#717680] leading-normal">
+                          Send <code>/start</code> или <code>test</code> боту <code className="bg-orange-50 px-1 py-0.5 rounded text-orange-850 font-bold font-mono">@TextAnalyzertbot</code> (или вашему настроенному боту) чтобы мгновенно подключиться!
+                        </p>
+                      </div>
+                    ) : (
+                      subscribers.map((sub) => {
+                        const isChecked = selectedChatIds.includes(sub.id);
+                        return (
+                          <div
+                            key={sub.id}
+                            onClick={() => {
+                              if (isChecked) {
+                                setSelectedChatIds(prev => prev.filter(id => id !== sub.id));
+                              } else {
+                                setSelectedChatIds(prev => [...prev, sub.id]);
+                              }
+                            }}
+                            className={`p-3 rounded-lg border cursor-pointer select-none transition-all flex items-center justify-between gap-3 ${
+                              isChecked 
+                                ? 'border-[#0a2e0e] bg-emerald-50/40 text-emerald-950 shadow-sm' 
+                                : 'border-[#dddddd] bg-white hover:bg-gray-50 text-gray-800'
+                            }`}
+                          >
+                            <div className="flex items-center space-x-2.5 min-w-0 flex-1">
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={() => {}} // toggled on row click
+                                className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 accent-[#0a2e0e]"
+                              />
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center space-x-1.5">
+                                  <span className="font-bold text-xs truncate">
+                                    {sub.name}
+                                  </span>
+                                  {sub.username && (
+                                    <span className="text-[10px] text-emerald-700 font-mono">
+                                      @{sub.username}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex flex-col text-[10px] text-gray-500 font-mono mt-0.5">
+                                  <span>ID: {sub.id}</span>
+                                  {sub.lastTextReceived && (
+                                    <span className="text-[10.5px] italic text-slate-700 font-sans mt-0.5 truncate max-w-xs">
+                                      «{sub.lastTextReceived}»
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteSubscriber(sub.id);
+                              }}
+                              className="p-1 hover:bg-red-100 rounded text-red-600 hover:text-red-800 transition-colors"
+                              title="Delete recipient"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {/* MINI FORM TO REGISTER MANUALLY */}
+                  <form onSubmit={registerSubscriberManually} className="pt-3 border-t border-[#dddddd] space-y-2">
+                    <span className="block text-[11px] font-semibold text-gray-500 uppercase">Register Recipient Manually</span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        placeholder="Numeric Chat ID"
+                        value={newChatId}
+                        onChange={(e) => setNewChatId(e.target.value)}
+                        className="text-xs bg-white text-gray-800 border border-[#dddddd] rounded px-2.5 py-1.5 focus:outline-none focus:border-[#aa2d00]"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Custom Name"
+                        value={newName}
+                        onChange={(e) => setNewName(e.target.value)}
+                        className="text-xs bg-white text-gray-800 border border-[#dddddd] rounded px-2.5 py-1.5 focus:outline-none focus:border-[#aa2d00]"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={isRegisteringSub || !newChatId}
+                      className="w-full py-1.5 border border-[#dddddd] bg-[#fafafa] hover:bg-gray-100 disabled:opacity-50 text-xs text-gray-800 font-semibold rounded flex items-center justify-center space-x-1"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>{isRegisteringSub ? 'Registering...' : 'Add Recipient'}</span>
+                    </button>
+                  </form>
                 </div>
 
                 {/* CONSUMER FAULT INDUCTION DECK */}
