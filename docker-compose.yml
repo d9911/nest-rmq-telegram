@@ -1,0 +1,69 @@
+version: '3.9'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: rmq_broker
+    ports:
+      - "5672:5672"   # AMQP protocol
+      - "15672:15672" # Management Plugin Web UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  producer:
+    build:
+      context: ./services/producer
+      dockerfile: Dockerfile
+    container_name: nest_producer
+    ports:
+      - "3001:3000"
+    environment:
+      PORT: 3000
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      NODE_ENV: development
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  consumer:
+    build:
+      context: ./services/consumer
+      dockerfile: Dockerfile
+    container_name: nest_consumer
+    ports:
+      - "3002:3000"
+    environment:
+      PORT: 3000
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      NODE_ENV: development
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  notification:
+    build:
+      context: ./services/notification
+      dockerfile: Dockerfile
+    container_name: nest_notification
+    ports:
+      - "3003:3000"
+    environment:
+      PORT: 3000
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID}
+      NODE_ENV: development
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+volumes:
+  rmq_data:

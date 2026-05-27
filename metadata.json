@@ -1,0 +1,8 @@
+{
+  "name": "NestJS RabbitMQ Telegram Microservices Workspace",
+  "description": "Interactive playground & clean modular workspace demonstrating NestJS Fastify Web API endpoints, RabbitMQ message buffering with retry policies, and automated Telegram Bot notification streams.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
