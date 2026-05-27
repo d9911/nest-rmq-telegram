@@ -1248,21 +1248,21 @@ export default function App() {
             </div>
 
             {/* TG TELEGRAM SCREEN PHONE DISPLAY EMULATOR */}
-            <div className="bg-[#0D111A] rounded-xl border border-slate-805 border-slate-800 p-8 mt-12 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+            <div className="bg-[#0D111A] rounded-xl border border-slate-800 p-8 mt-12 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
               <div className="md:col-span-7 space-y-4">
                 <div className="inline-flex items-center space-x-1.5 text-xs text-emerald-400 bg-emerald-950/40 px-3 py-1 rounded-full font-bold border border-emerald-900/30">
                   <Bot className="w-3.5 h-3.5" />
-                  <span>{t.sandboxBadge}</span>
+                  <span>{t.virtualPhoneHeaderBadge}</span>
                 </div>
-                <h3 className="text-2xl font-semibold tracking-tight text-white">{t.sandboxTitle}</h3>
-                <p className="text-sm text-slate-300 leading-relaxed">{t.sandboxDesc}</p>
+                <h3 className="text-2xl font-semibold tracking-tight text-white">{t.virtualPhoneTitle}</h3>
+                <p className="text-sm text-slate-300 leading-relaxed">{t.virtualPhoneDesc}</p>
 
                 <div className="bg-[#05060A]/85 rounded-xl border border-slate-800/80 p-4 text-xs">
-                  <h4 className="font-semibold text-xs mb-1.5 text-[#fcab79]">{t.sandboxGuideTitle}</h4>
+                  <h4 className="font-semibold text-xs mb-1.5 text-[#fcab79]">{t.virtualPhoneSetupGuideTitle}</h4>
                   <ol className="list-decimal list-inside space-y-1 text-slate-300 font-normal">
-                    <li>{t.sandboxGuideStep1}</li>
-                    <li>{t.sandboxGuideStep2}</li>
-                    <li>{t.sandboxGuideStep3}</li>
+                    <li>{t.virtualPhoneGuideStep1}</li>
+                    <li>{t.virtualPhoneGuideStep2}</li>
+                    <li>{t.virtualPhoneGuideStep3}</li>
                   </ol>
                 </div>
               </div>
@@ -1293,7 +1293,7 @@ export default function App() {
                     {/* Messages Panel */}
                     <div className="relative z-10 flex-1 overflow-y-auto space-y-2 pr-1 pt-1 flex flex-col justify-end w-full">
                       {messages.filter((m) => m.status === 'acked' || m.status === 'processing').length === 0 ? (
-                        <p className="text-slate-500 italic text-center py-10 text-[11px]">{t.sandboxEmptyText}</p>
+                        <p className="text-slate-500 italic text-center py-10 text-[11px]">{t.phoneBotAwaiting}</p>
                       ) : (
                         messages
                           .filter((m) => m.status === 'acked' || m.status === 'processing')
@@ -1314,7 +1314,7 @@ export default function App() {
 
                     {/* Bottom Phone Bar */}
                     <div className="relative z-10 pt-2 border-t border-slate-800/80 mt-2 flex items-center justify-between">
-                      <div className="text-[9px] bg-[#05060A] border border-slate-800/80 text-slate-400 rounded-full w-full py-1 px-3 text-center">{t.sandboxConsoleLabel}</div>
+                      <div className="text-[9px] bg-[#05060A] border border-slate-800/80 text-slate-400 rounded-full w-full py-1 px-3 text-center">{t.phoneReadOnlyConsole}</div>
                     </div>
                   </div>
                 </div>
