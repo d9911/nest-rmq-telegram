@@ -31,6 +31,7 @@ interface Subscriber {
 
 // In-memory array of discovered active chats/users
 let subscribers: Subscriber[] = [];
+let isPolling = false;
 
 // If we have an environment chat ID already, seed it!
 if (globalChatId && globalChatId !== 'TextAnalyzertbot') {
@@ -51,13 +52,22 @@ function maskSecret(secret: string): string {
 
 // Background poll worker to listen for in-bound /start, text messages, and transcribing voice/audio clips
 async function pollTelegramUpdates() {
+  if (isPolling) return;
+  isPolling = true;
+
   const tokenToPoll = globalToken;
-  if (!tokenToPoll) return;
+  if (!tokenToPoll) {
+    isPolling = false;
+    return;
+  }
 
   try {
     const url = `https://api.telegram.org/bot${tokenToPoll}/getUpdates?offset=${lastUpdateId + 1}&timeout=2`;
     const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
-    if (!response.ok) return;
+    if (!response.ok) {
+      isPolling = false;
+      return;
+    }
 
     const data = await response.json();
     if (data.ok && Array.isArray(data.result)) {
@@ -72,7 +82,7 @@ async function pollTelegramUpdates() {
           const full_name = [first_name, last_name].filter(Boolean).join(' ') || `Chat ID ${chatIdVal}`;
           const username = message.from?.username ? `@${message.from.username}` : undefined;
           const userText = message.text || '';
-          
+
           let finalUserText = userText || '';
           let isVoice = false;
           let voiceFileId = '';
@@ -141,20 +151,20 @@ async function pollTelegramUpdates() {
               const getFileUrl = `https://api.telegram.org/bot${tokenToPoll}/getFile?file_id=${voiceFileId}`;
               const getFileRes = await fetch(getFileUrl);
               const getFileJson = await getFileRes.json() as any;
-              
+
               if (getFileJson.ok && getFileJson.result && getFileJson.result.file_path) {
                 const filePath = getFileJson.result.file_path;
                 const fileDownloadUrl = `https://api.telegram.org/file/bot${tokenToPoll}/${filePath}`;
-                
+
                 const fileContentRes = await fetch(fileDownloadUrl);
                 const arrayBuffer = await fileContentRes.arrayBuffer();
                 const base64Data = Buffer.from(arrayBuffer).toString('base64');
-                
+
                 const geminiApiKey = process.env.GEMINI_API_KEY;
                 if (!geminiApiKey) {
                   throw new Error('Ключ API Gemini не настроен во вкладке Settings > Secrets.');
                 }
-                
+
                 const ai = new GoogleGenAI({
                   apiKey: geminiApiKey,
                   httpOptions: {
@@ -163,7 +173,7 @@ async function pollTelegramUpdates() {
                     }
                   }
                 });
-                
+
                 const geminiRes = await ai.models.generateContent({
                   model: 'gemini-3.5-flash',
                   contents: [
@@ -178,7 +188,7 @@ async function pollTelegramUpdates() {
                     }
                   ]
                 });
-                
+
                 const resultText = geminiRes.text?.trim() || '⚠️ Речь не распознана или аудио слишком тихое.';
                 const resolvedTextRepresentation = `[🎙️ Голосовое]: ${resultText}`;
 
@@ -262,6 +272,8 @@ async function pollTelegramUpdates() {
     }
   } catch (err) {
     // Ignore updates polling errors silently
+  } finally {
+    isPolling = false;
   }
 }
 
@@ -296,7 +308,7 @@ async function startServer() {
   app.post('/api/telegram/subscribers/add', (req, res) => {
     const { id, name, username } = req.body;
     if (!id) return res.status(400).json({ success: false, error: 'Chat ID required' });
-    
+
     // Auto-update globalChatId if none
     if (!globalChatId) {
       globalChatId = String(id);
@@ -338,7 +350,7 @@ async function startServer() {
     if (token && token !== 'SERVER_ENV_TOKEN_ACTIVE') {
       globalToken = token;
     }
-    
+
     // Support broadcasting if an array is passed, or routing manually.
     // If no specific chatId passed, we send to ALL subscribers!
     let activeChatIds: string[] = [];
@@ -349,7 +361,7 @@ async function startServer() {
         globalChatId = parsedId;
       }
     }
-    
+
     // If we have selected multiple or none, compile from subscriber list
     if (activeChatIds.length === 0) {
       if (subscribers.length > 0) {

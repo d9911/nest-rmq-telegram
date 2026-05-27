@@ -49,6 +49,10 @@ export interface SimulationLog {
 }
 
 export default function App() {
+  const loggedChatIds = React.useRef<Set<string>>(new Set());
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+  const [activeWorkerId, setActiveWorkerId] = useState<number | null>(null);
+
   // Multilingual Language state (English / Russian)
   const [lang, setLang] = useState<Language>((localStorage.getItem('APP_LANGUAGE') as Language) || 'ru')
   const t = translations[lang]
@@ -280,6 +284,9 @@ export default function App() {
 
   // 3. CONSUMER SERVICE LOGIC & ACKING
   const consumeMessage = async (msg: SimulatedMessage) => {
+    const threadId = Math.floor(Math.random() * 3) + 1;
+    setActiveWorkerId(threadId);
+
     setMessages(prev =>
       prev.map(m => (m.id === msg.id ? { ...m, status: 'processing' } : m))
     )
@@ -288,6 +295,7 @@ export default function App() {
     // Check if error simulation is checked
     const delay = consumerSettings.processingDelayMs
     setTimeout(async () => {
+      setActiveWorkerId(null);
       if (consumerSettings.simulateError) {
         // Consumer handles error & NACK
         setNackedCount(prev => prev + 1)
@@ -426,14 +434,18 @@ export default function App() {
         if (res.ok) {
           const cfg = await res.json()
           if (cfg.hasServerToken) {
+            if (cfg.chatIdVal) {
+              if (!loggedChatIds.current.has(cfg.chatIdVal)) {
+                loggedChatIds.current.add(cfg.chatIdVal);
+                addLog('System', 'success', `✨ Получен числовой Chat ID от Telegram: ${cfg.chatIdVal}! Подключение установлено!`);
+              }
+            }
+
             // If server-side API or polling detected a chat ID, grab it!
             setTgConfig(prev => {
               const newToken = prev.token || 'SERVER_ENV_TOKEN_ACTIVE';
               const newChatId = prev.chatId || (cfg.chatIdVal ? cfg.chatIdVal : 'SERVER_ENV_CHAT_ID_ACTIVE');
               
-              if (cfg.chatIdVal && prev.chatId !== cfg.chatIdVal && !subscribers.some(s => s.id === cfg.chatIdVal)) {
-                addLog('System', 'success', `✨ Получен числовой Chat ID от Telegram: ${cfg.chatIdVal}! Подключение установлено!`);
-              }
               return {
                 token: newToken,
                 chatId: newChatId
@@ -479,17 +491,17 @@ export default function App() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-white text-[#181d26] font-sans antialiased selection:bg-[#fcab79] selection:text-[#aa2d00]">
-      {/* 1. TOP NAV - Airtable Pure Light Mode Styling */}
-      <nav id="top-nav" className="sticky top-0 z-50 h-16 bg-white border-b border-[#dddddd] shadow-sm">
+    <div className="min-h-screen bg-[#07090E] text-slate-100 font-sans antialiased selection:bg-[#fb923c] selection:text-white pb-16">
+      {/* 1. TOP NAV - Airtable Unified Space Dark Styling */}
+      <nav id="top-nav" className="sticky top-0 z-50 h-16 bg-[#07090E]/95 border-b border-slate-800 shadow-xl backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
           <div className="flex items-center space-x-8">
             {/* Airtable Signature Visual Grid Icon & Title */}
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-lg bg-[#aa2d00] flex items-center justify-center text-white font-bold text-lg shadow-sm">
+              <div className="w-8 h-8 rounded-lg bg-[#aa2d00] flex items-center justify-center text-white font-bold text-lg shadow-md">
                 N
               </div>
-              <span className="font-semibold text-lg tracking-tight text-[#181d26]">
+              <span className="font-semibold text-lg tracking-tight text-white">
                 {t.workspaceTitle}
               </span>
             </div>
@@ -500,8 +512,8 @@ export default function App() {
                 onClick={() => setActiveTab('playground')}
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                   activeTab === 'playground'
-                    ? 'text-[#aa2d00] bg-[#fdf2f2] font-semibold'
-                    : 'text-[#333840] hover:text-[#181d26]'
+                    ? 'text-white bg-slate-800/60 font-semibold border border-slate-700/50'
+                    : 'text-slate-400 hover:text-white'
                 }`}
               >
                 {t.interactivePlayground}
@@ -510,8 +522,8 @@ export default function App() {
                 onClick={() => setActiveTab('code')}
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                   activeTab === 'code'
-                    ? 'text-[#aa2d00] bg-[#fdf2f2] font-semibold'
-                    : 'text-[#333840] hover:text-[#181d26]'
+                    ? 'text-white bg-slate-800/60 font-semibold border border-slate-700/50'
+                    : 'text-slate-400 hover:text-white'
                 }`}
               >
                 {t.sourceCodeIde}
@@ -520,8 +532,8 @@ export default function App() {
                 onClick={() => setActiveTab('docs')}
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                   activeTab === 'docs'
-                    ? 'text-[#aa2d00] bg-[#fdf2f2] font-semibold'
-                    : 'text-[#333840] hover:text-[#181d26]'
+                    ? 'text-white bg-slate-800/60 font-semibold border border-slate-700/50'
+                    : 'text-slate-400 hover:text-white'
                 }`}
               >
                 {t.documentation}
@@ -531,14 +543,14 @@ export default function App() {
 
           <div className="flex items-center space-x-4">
             {/* Language Toggle Selector */}
-            <div className="flex bg-gray-100 p-1 rounded-lg border border-[#dddddd] items-center text-[11px]">
+            <div className="flex bg-slate-900 p-1 rounded-lg border border-slate-800 items-center text-[11px]">
               <button
                 onClick={() => {
                   setLang('ru');
                   localStorage.setItem('APP_LANGUAGE', 'ru');
                 }}
                 className={`px-2.5 py-1 rounded font-bold transition-all ${
-                  lang === 'ru' ? 'bg-[#aa2d00] text-white shadow-sm' : 'text-gray-600 hover:text-black'
+                  lang === 'ru' ? 'bg-[#aa2d00] text-white shadow-sm' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 RU
@@ -549,7 +561,7 @@ export default function App() {
                   localStorage.setItem('APP_LANGUAGE', 'en');
                 }}
                 className={`px-2.5 py-1 rounded font-bold transition-all ${
-                  lang === 'en' ? 'bg-[#aa2d00] text-white shadow-sm' : 'text-gray-600 hover:text-black'
+                  lang === 'en' ? 'bg-[#aa2d00] text-white shadow-sm' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 EN
@@ -561,8 +573,8 @@ export default function App() {
               onClick={() => setShowConfig(!showConfig)}
               className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg border text-xs font-semibold tracking-wide transition-colors ${
                 tgConfig.token 
-                  ? 'border-[#006400] text-[#006400] bg-[#e6f4ea]' 
-                  : 'border-[#dddddd] text-[#333840] bg-white hover:bg-gray-50'
+                  ? 'border-emerald-500/40 text-emerald-400 bg-emerald-950/40' 
+                  : 'border-slate-800 text-slate-350 bg-slate-900 hover:bg-slate-800/80'
               }`}
             >
               <Settings className="w-3.5 h-3.5" />
@@ -575,7 +587,7 @@ export default function App() {
                 e.preventDefault()
                 setActiveTab('code')
               }}
-              className="px-4 py-1.5 rounded-lg bg-[#181d26] text-white text-xs font-semibold tracking-wide hover:bg-[#0d1218] transition-colors"
+              className="px-4 py-1.5 rounded-lg bg-slate-800 text-slate-200 text-xs font-semibold tracking-wide hover:bg-slate-700 hover:text-white transition-colors"
             >
               {t.copySourceCodeBtn}
             </a>
@@ -583,33 +595,33 @@ export default function App() {
         </div>
       </nav>
 
-      {/* 2. HERO BAND - Generous Minimalist Breathing Room */}
-      <header className="py-12 bg-[#f8fafc] border-b border-[#dddddd]">
+      {/* 2. HERO BAND - Unified dark workspace theme */}
+      <header className="py-12 bg-slate-900/10 border-b border-slate-800/80">
         <div className="max-w-7xl mx-auto px-6">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#f5e9d4] border border-[#d9a441] text-[#aa2d00] text-xs font-semibold mb-4">
-              <Cpu className="w-3.5 h-3.5" />
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#aa2d00]/10 border border-[#aa2d00]/30 text-[#fcab79] text-xs font-semibold mb-4">
+              <Cpu className="w-3.5 h-3.5 animate-pulse" />
               <span>{t.heroTechBadge}</span>
             </div>
             
-            <h1 className="text-4xl md:text-5xl font-normal tracking-tight text-[#181d26] leading-tight mb-4">
-              {t.heroHeaderFirst} <span className="font-semibold text-[#aa2d00]">{t.heroHeaderAccent}</span>
+            <h1 className="text-4xl md:text-5xl font-normal tracking-tight text-white leading-tight mb-4">
+              {t.heroHeaderFirst} <span className="font-semibold text-[#fcab79]">{t.heroHeaderAccent}</span>
             </h1>
-            <p className="text-base text-[#333840] leading-relaxed mb-6">
+            <p className="text-base text-slate-300 leading-relaxed mb-6">
               {t.heroDesc}
             </p>
-
+ 
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={() => setActiveTab('playground')}
-                className="px-6 py-3 bg-[#181d26] hover:bg-[#0d1218] text-white font-medium rounded-lg text-sm transition-all inline-flex items-center space-x-2"
+                className="px-6 py-3 bg-white hover:bg-slate-100 text-[#07090E] font-semibold rounded-lg text-sm transition-all inline-flex items-center space-x-2 shadow-md"
               >
-                <Play className="w-4 h-4 fill-current" />
+                <Play className="w-4 h-4 fill-current text-slate-950" />
                 <span>{t.runSignalBtn}</span>
               </button>
               <button
                 onClick={() => setActiveTab('code')}
-                className="px-6 py-3 bg-white border border-[#dddddd] text-[#181d26] hover:bg-gray-50 font-medium rounded-lg text-sm transition-all inline-flex items-center space-x-2"
+                className="px-6 py-3 bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 font-medium rounded-lg text-sm transition-all inline-flex items-center space-x-2"
               >
                 <Code className="w-4 h-4" />
                 <span>{t.browseCodeBtn}</span>
@@ -621,53 +633,53 @@ export default function App() {
 
       {/* 3. SETTING DIALOG - IN-APP SECRETS STORAGE ACCORDING TO SECURITY DIRECTIVES */}
       {showConfig && (
-        <div className="fixed inset-0 z-50 bg-[#181d26]/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden border border-[#dddddd]">
-            <div className="px-6 py-4 border-b border-[#dddddd] bg-gray-50 flex justify-between items-center">
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#0D111A] rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-800">
+            <div className="px-6 py-4 border-b border-slate-800 bg-slate-900/30 flex justify-between items-center text-white">
               <div className="flex items-center space-x-2">
-                <Bot className="w-5 h-5 text-[#aa2d00]" />
-                <span className="font-semibold text-base">{t.botDialogTitle}</span>
+                <Bot className="w-5 h-5 text-[#fcab79]" />
+                <span className="font-semibold text-base text-white">{t.botDialogTitle}</span>
               </div>
               <button 
                 onClick={() => setShowConfig(false)}
-                className="text-[#717680] hover:text-[#181d26] text-xl font-bold"
+                className="text-slate-400 hover:text-white text-xl font-bold"
               >
                 &times;
               </button>
             </div>
             
             <form onSubmit={saveTelegramConfig} className="p-6 space-y-4">
-              <div className="p-3 bg-[#f5e9d4] text-[#aa2d00] rounded-lg border border-[#e0cbaf] text-xs leading-relaxed">
+              <div className="p-3 bg-amber-955/20 text-[#fcab79] rounded-lg border border-amber-900/40 text-xs leading-relaxed">
                 <strong>{t.botSecureLabel}</strong>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#181d26] uppercase tracking-wider mb-1">
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
                   {t.botTokenLabel}
                 </label>
                 <input
-                  type="password"
-                  placeholder={t.botTokenPlaceholder}
-                  id="bot-token-input"
-                  value={tgConfig.token}
-                  onChange={(e) => setTgConfig({ ...tgConfig, token: e.target.value })}
-                  className="w-full text-sm rounded-lg border border-[#dddddd] px-3 py-2.5 bg-white text-[#181d26] focus:outline-none focus:border-[#aa2d00]"
+                   type="password"
+                   placeholder={t.botTokenPlaceholder}
+                   id="bot-token-input"
+                   value={tgConfig.token}
+                   onChange={(e) => setTgConfig({ ...tgConfig, token: e.target.value })}
+                   className="w-full text-sm rounded-lg border border-slate-800 px-3 py-2.5 bg-slate-950 text-slate-100 focus:outline-none focus:border-orange-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#181d26] uppercase tracking-wider mb-1">
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
                   {t.botChatIdLabel}
                 </label>
                 <input
-                  type="text"
-                  placeholder={t.botChatIdPlaceholder}
-                  id="chat-id-input"
-                  value={tgConfig.chatId}
-                  onChange={(e) => setTgConfig({ ...tgConfig, chatId: e.target.value })}
-                  className="w-full text-sm rounded-lg border border-[#dddddd] px-3 py-2.5 bg-white text-[#181d26] focus:outline-none focus:border-[#aa2d00]"
+                   type="text"
+                   placeholder={t.botChatIdPlaceholder}
+                   id="chat-id-input"
+                   value={tgConfig.chatId}
+                   onChange={(e) => setTgConfig({ ...tgConfig, chatId: e.target.value })}
+                   className="w-full text-sm rounded-lg border border-slate-800 px-3 py-2.5 bg-slate-950 text-slate-100 focus:outline-none focus:border-orange-500"
                 />
-                <span className="text-[11px] text-[#717680] mt-1 block">
+                <span className="text-[11px] text-slate-450 text-slate-400 mt-1 block">
                   {t.botChatIdDesc}
                 </span>
               </div>
@@ -683,7 +695,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={clearTelegramConfig}
-                  className="bg-gray-100 hover:bg-gray-200 text-[#333840] py-2 px-3 rounded-lg font-medium text-xs transition-colors"
+                  className="bg-slate-800 hover:bg-slate-705 hover:bg-slate-700 text-slate-200 py-2 px-3 rounded-lg font-medium text-xs transition-colors border border-slate-700/60"
                 >
                   {t.botClearBtn}
                 </button>
@@ -694,225 +706,425 @@ export default function App() {
       )}
 
       {/* 4. MAIN PLAYGROUND CONTENT */}
-      <main className="max-w-7xl mx-auto px-6 py-12">
+      <main className="max-w-7xl mx-auto px-6 py-6">
         {activeTab === 'playground' && (
-          <div className="space-y-12">
-            {/* INTERACTIVE WORKFLOW MAP */}
-            <section className="bg-white border border-[#dddddd] rounded-xl overflow-hidden shadow-sm">
-              <div className="px-6 py-4 border-b border-[#dddddd] bg-gray-50 flex justify-between items-center">
-                <span className="font-semibold text-sm tracking-wide text-[#333840]">
-                  {t.architectureTitle}
-                </span>
-                <span className="flex items-center space-x-1.5 text-xs text-[#0d9488]">
-                  <span className="w-2 h-2 rounded-full bg-[#0d9488] animate-ping" />
+          <div className="space-y-6">
+            
+            {/* Embedded custom styling for SVG flow dash arrays */}
+            <style dangerouslySetInnerHTML={{__html: `
+              @keyframes flow-highway {
+                to { stroke-dashoffset: -40; }
+              }
+              .animate-flow-dash {
+                animation: flow-highway 2.5s linear infinite;
+              }
+              .animate-flow-slow {
+                animation: flow-highway 7s linear infinite;
+              }
+            `}} />
+
+            {/* TWO ASPECT COLUMNS / GRID SYSTEM LAYOUT */}
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+              
+              {/* LEFT TELEMENTRY COLUMN: Topology Chart + Message Queues + System Trace Logs */}
+              <div className="xl:col-span-8 space-y-6">
+
+                {/* 1. TOPOLOGY MAP DECK (Microservices Architecture Flow Chart) */}
+                <section className="rounded-xl border border-slate-800 bg-[#0D111A] p-6 shadow-xl relative overflow-hidden">
+              
+              {/* Glowing background highlights simulating network nodes */}
+              <div className="absolute top-0 right-1/4 w-72 h-32 bg-[#aa2d00]/5 rounded-full blur-3xl pointer-events-none" style={{ zIndex: 0 }} />
+              <div className="absolute bottom-0 left-10 w-48 h-24 bg-purple-500/5 rounded-full blur-2xl pointer-events-none" style={{ zIndex: 0 }} />
+
+              {/* Header */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-6 border-b border-slate-800/85 pb-4 relative z-10">
+                <div>
+                  <h3 className="font-sans font-semibold text-white text-base flex items-center gap-2">
+                    <Layers className="w-5 h-5 text-[#fcab79] animate-pulse" />
+                    <span>Live Microservices Architecture Data Flow</span>
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Real-time visualization of parallel asynchronous task execution pipelines
+                  </p>
+                </div>
+                <span className="flex items-center space-x-1.5 text-xs text-emerald-400 bg-emerald-950/40 px-2.5 py-1 rounded-full border border-emerald-900/30 font-mono">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
                   <span className="font-semibold">{t.brokerNetworkOnline}</span>
                 </span>
               </div>
 
-              <div className="p-8 grid grid-cols-1 lg:grid-cols-4 gap-6 relative">
-                {/* Visual flowchart connections for Desktop */}
-                <div className="hidden lg:block absolute top-[43%] left-[22%] w-[12%] h-[2px] bg-dashed-border" />
-                <div className="hidden lg:block absolute top-[43%] left-[47%] w-[12%] h-[2px] bg-dashed-border" />
-                <div className="hidden lg:block absolute top-[43%] left-[72%] w-[12%] h-[2px] bg-dashed-border" />
+              {/* Nodes Grid containing 4 separate service actors */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 relative z-10 py-2">
+                
+                {/* SVG Connector lines overlay for desktop view */}
+                <div className="absolute inset-0 pointer-events-none hidden md:block" style={{ zIndex: -1 }}>
+                  <svg className="w-full h-full overflow-visible">
+                    {/* Stream 1: Producer to Broker */}
+                    <line x1="22%" y1="50%" x2="28%" y2="50%" stroke="#1E293B" strokeWidth="2" />
+                    <line x1="22%" y1="50%" x2="28%" y2="50%" stroke="#fb923c" strokeWidth="2.5" strokeDasharray="5 3" className="animate-flow-slow" />
+                    
+                    {/* Stream 2: Broker to Consumer */}
+                    <line x1="47%" y1="50%" x2="53%" y2="50%" stroke="#1E293B" strokeWidth="2" />
+                    {messages.some(m => m.status === 'queued') && (
+                      <line x1="47%" y1="50%" x2="53%" y2="50%" stroke="#e9d5ff" strokeWidth="2.5" strokeDasharray="5 3" className="animate-flow-dash" />
+                    )}
 
-                {/* Node 1: Producer API */}
-                <div className="border border-[#dddddd] rounded-xl p-5 bg-[#fafafa] flex flex-col justify-between space-y-4">
+                    {/* Stream 3: Consumer to Notification Gate */}
+                    <line x1="72%" y1="50%" x2="78%" y2="50%" stroke="#1E293B" strokeWidth="2" />
+                    {messages.some(m => m.status === 'processing') && (
+                      <line x1="72%" y1="50%" x2="78%" y2="50%" stroke="#34d399" strokeWidth="2.5" strokeDasharray="5 3" className="animate-flow-dash" />
+                    )}
+                  </svg>
+                </div>
+
+                {/* Node 1: PRODUCER Core */}
+                <div className="border border-slate-800 rounded-xl p-4 bg-[#05060A]/80 flex flex-col justify-between space-y-3 transition-all hover:bg-[#080b12] hover:border-slate-700">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold tracking-wider text-[#717680] uppercase">{t.producerNodeTitle}</span>
-                    <span className="px-2 py-0.5 bg-[#e0f2fe] text-[#0369a1] text-[10px] font-bold rounded">Fastify API</span>
+                    <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">{t.producerNodeTitle}</span>
+                    <span className="px-1.5 py-0.5 bg-sky-955/44 text-sky-400 text-[9px] font-bold rounded border border-sky-900/30">Fastify API</span>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-base mb-1">nest-producer</h3>
-                    <p className="text-xs text-[#717680]">
+                    <h4 className="font-semibold text-sm text-slate-200 mb-1 flex items-center space-x-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
+                      <span>nest-producer</span>
+                    </h4>
+                    <p className="text-[11px] text-slate-400 leading-normal">
                       {t.producerNodeDesc}
                     </p>
-                    <div className="mt-2 text-xs font-mono bg-white p-1.5 rounded border border-[#dddddd]">
-                      {t.producerExchangeLabel}
-                    </div>
                   </div>
-                  <div className="pt-2 border-t border-[#dddddd] flex items-center justify-between text-xs">
-                    <span className="text-[#717680]">{t.producerTotalDispatched}</span>
-                    <span className="font-mono font-bold">{sentCount}</span>
+                  <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+                    <span>Dispatched:</span>
+                    <span className="font-bold text-white bg-slate-800 px-1.5 py-0.5 rounded">{sentCount}</span>
                   </div>
                 </div>
 
-                {/* Node 2: Message queue RabbitMQ */}
-                <div className="ring-2 ring-[#aa2d00] ring-offset-2 rounded-xl p-5 bg-[#fcab79]/5 flex flex-col justify-between space-y-4">
+                {/* Node 2: RABBITMQ AMQP BROKER */}
+                <div className="ring-1 ring-orange-500/30 ring-offset-2 ring-offset-[#07090E] rounded-xl p-4 bg-orange-955/20 flex flex-col justify-between space-y-3 transition-all hover:bg-orange-905/30">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold tracking-wider text-[#aa2d00] uppercase">{t.brokerNodeTitle}</span>
-                    <span className="px-2 py-0.5 bg-[#ffedd5] text-[#aa2d00] text-[10px] font-bold rounded">AMQP 3.13</span>
+                    <span className="text-[10px] font-bold tracking-wider text-orange-400 uppercase">{t.brokerNodeTitle}</span>
+                    <span className="px-1.5 py-0.5 bg-amber-955/44 text-amber-400 text-[9px] font-bold rounded border border-amber-900/30">AMQP 3.12</span>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-base mb-1 text-[#aa2d00] flex items-center space-x-1.5">
-                      <Database className="w-4.5 h-4.5 text-[#aa2d00]" />
-                      <span>Message Broker</span>
-                    </h3>
-                    <p className="text-xs text-[#717680]">
-                      {t.brokerNodeDesc}
-                    </p>
-                    <div className="mt-2 space-y-1">
-                      <div className="flex justify-between text-[11px] font-mono bg-white p-1 rounded border border-[#dddddd]">
-                        <span className="text-[#333840]">{t.brokerTasksQueue}</span>
-                        <span className="text-[#aa2d00] font-bold">
+                    <h4 className="font-semibold text-sm text-[#fcab79] mb-1 flex items-center space-x-1">
+                      <Database className="w-3.5 h-3.5 text-[#fcab79]" />
+                      <span>RabbitMQ</span>
+                    </h4>
+                    <div className="mt-1.5 space-y-1 text-[10px] font-mono">
+                      <div className="flex justify-between bg-slate-950/60 p-1 rounded border border-slate-800/60">
+                        <span className="text-slate-400">tasks_queue:</span>
+                        <span className="text-orange-400 font-bold">
                           {messages.filter(m => m.status === 'queued' || m.status === 'broker_delivering').length}
                         </span>
                       </div>
-                      <div className="flex justify-between text-[11px] font-mono bg-white p-1 rounded border border-[#dddddd]">
-                        <span className="text-[#333840]">{t.brokerNotifyQueue}</span>
-                        <span className="text-[#0a2e0e] font-bold">
+                      <div className="flex justify-between bg-slate-950/60 p-1 rounded border border-slate-800/60">
+                        <span className="text-slate-400">alerts_queue:</span>
+                        <span className="text-indigo-400 font-bold">
                           {messages.filter(m => m.status === 'processing').length}
                         </span>
                       </div>
                     </div>
                   </div>
-                  <div className="pt-2 border-t border-[#e0cbaf] flex items-center justify-between text-xs">
-                    <span className="text-[#717680]">{t.brokerDLXCount}</span>
-                    <span className="font-mono font-bold text-red-600">{deadLetterCount}</span>
+                  <div className="pt-2 border-t border-orange-900/20 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+                    <span>DLX Stacked:</span>
+                    <span className="font-bold text-red-400 bg-red-955/44 px-1.5 py-0.5 rounded border border-red-900/30">{deadLetterCount}</span>
                   </div>
                 </div>
 
-                {/* Node 3: Consumer Worker */}
-                <div className="border border-[#dddddd] rounded-xl p-5 bg-[#fafafa] flex flex-col justify-between space-y-4">
+                {/* Node 3: NEST CONSUMER WORKER WITH ACTIVE CPU GRAPH */}
+                <div className="border border-slate-800 rounded-xl p-4 bg-[#05060A]/80 flex flex-col justify-between space-y-3 transition-all hover:bg-[#080b12] hover:border-slate-700">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold tracking-wider text-[#717680] uppercase">{t.consumerNodeTitle}</span>
-                    <span className="px-2 py-0.5 bg-[#e0e7ff] text-[#4338ca] text-[10px] font-bold rounded">Event Processor</span>
+                    <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">{t.consumerNodeTitle}</span>
+                    <span className="px-1.5 py-0.5 bg-amber-955/44 text-amber-400 text-[9px] font-bold rounded border border-amber-900/30">Node CPU</span>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-base mb-1">nest-consumer</h3>
-                    <p className="text-xs text-[#717680]">
+                    <h4 className="font-semibold text-sm text-slate-200 mb-1 flex items-center space-x-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                      <span>nest-consumer</span>
+                    </h4>
+                    <p className="text-[11px] text-slate-400 leading-normal mb-1.5">
                       {t.consumerNodeDesc}
                     </p>
-                    <div className="mt-2 text-xs font-mono bg-white p-1.5 rounded border border-[#dddddd]">
-                      {t.consumerQueueLabel}
+                    
+                    {/* Dynamic Multi-threading CPUs display */}
+                    <div className="flex items-center space-x-1 border border-slate-800 bg-[#05060A]/90 p-1 rounded">
+                      {[1, 2, 3].map((num) => (
+                        <span key={num} className={`flex-1 text-center py-0.5 rounded text-[8.5px] font-mono leading-none transition-all duration-300 ${
+                          activeWorkerId === num 
+                            ? 'bg-amber-400 text-slate-950 font-bold animate-pulse shadow-md border border-amber-300/40' 
+                            : 'bg-slate-950 border border-slate-800 text-slate-500'
+                        }`}>
+                          CPU_{num}
+                        </span>
+                      ))}
                     </div>
                   </div>
-                  <div className="pt-2 border-t border-[#dddddd] flex items-center justify-between text-xs">
-                    <span className="text-[#717680]">{t.consumerAckNackLabel}</span>
-                    <span className="font-mono font-bold text-[#181d26]">
-                      {ackedCount} <span className="text-gray-400">/</span> <span className="text-red-500">{nackedCount}</span>
+                  <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+                    <span>ACK/NACK:</span>
+                    <span className="font-bold text-slate-205 text-slate-200">
+                      {ackedCount} <span className="text-slate-600">/</span> <span className="text-red-400">{nackedCount}</span>
                     </span>
                   </div>
                 </div>
 
-                {/* Node 4: Telegram Integrator */}
-                <div className="border border-[#dddddd] rounded-xl p-5 bg-[#0a2e0e]/5 flex flex-col justify-between space-y-4">
+                {/* Node 4: NOTIFICATION GATEWAY (Telegram connection) */}
+                <div className="border border-slate-800 rounded-xl p-4 bg-emerald-955/5 flex flex-col justify-between space-y-3 transition-all hover:bg-emerald-950/10">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold tracking-wider text-[#0a2e0e] uppercase">{t.telegramGatewayTitle}</span>
-                    <span className="px-2 py-0.5 bg-[#dcfce7] text-[#15803d] text-[10px] font-bold rounded">Bot API</span>
+                    <span className="text-[10px] font-bold tracking-wider text-emerald-400 uppercase">{t.telegramGatewayTitle}</span>
+                    <span className="px-1.5 py-0.5 bg-emerald-955/44 text-emerald-400 text-[9px] font-bold rounded border border-emerald-900/30">Bot API</span>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-base mb-1 text-[#0a2e0e] flex items-center space-x-1.5">
-                      <Bot className="w-4.5 h-4.5 text-[#0a2e0e]" />
+                    <h4 className="font-semibold text-sm text-emerald-400 mb-1 flex items-center space-x-1">
+                      <Bot className="w-4 h-4 text-emerald-400" />
                       <span>nest-notification</span>
-                    </h3>
-                    <p className="text-xs text-[#717680]">
-                      {t.telegramGatewayDesc}
-                    </p>
-                    <div className="mt-2 text-[11px] leading-relaxed">
+                    </h4>
+                    <div className="text-[10.5px] tracking-wide text-slate-455 text-slate-400 mt-1">
                       {t.telegramStatusLabel}{' '}
-                      {telegramStatus === 'idle' && <span className="text-gray-400 font-semibold">{t.telegramStatusIdle}</span>}
-                      {telegramStatus === 'simulated' && <span className="text-[#0a2e0e] font-semibold">{t.telegramStatusSimulated}</span>}
-                      {telegramStatus === 'success' && <span className="text-green-600 font-semibold">{t.telegramStatusSuccess}</span>}
-                      {telegramStatus === 'failed' && <span className="text-red-600 font-semibold">{t.telegramStatusFailed}</span>}
+                      {telegramStatus === 'idle' && <span className="text-slate-500 font-semibold">{t.telegramStatusIdle}</span>}
+                      {telegramStatus === 'simulated' && <span className="text-sky-400 font-semibold">{t.telegramStatusSimulated}</span>}
+                      {telegramStatus === 'success' && <span className="text-emerald-400 font-semibold">{t.telegramStatusSuccess}</span>}
+                      {telegramStatus === 'failed' && <span className="text-red-400 font-semibold">{t.telegramStatusFailed}</span>}
                     </div>
                   </div>
-                  <div className="pt-2 border-t border-[#c6dfc9] flex items-center justify-between text-xs">
-                    <span className="text-[#717680]">{t.telegramConfigLabel}</span>
-                    <span className="text-[11px] font-semibold text-[#0a2e0e]">
-                      {tgConfig.token ? t.telegramConfigReal : t.telegramConfigSandbox}
-                    </span>
                   </div>
                 </div>
-              </div>
-            </section>
+              </section>
 
-            {/* TWO COLUMN GRID: INPUT & DIAGNOSTIC SIMULATOR */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              
-              {/* LEFT COLUMN (Span 5): Control Inputs & Settings */}
-              <div className="lg:col-span-5 space-y-6">
-                
-                {/* EVENT INGESTION FORM (PRODUCER CORES) */}
-                <div className="bg-white border border-[#dddddd] rounded-xl shadow-sm p-6 space-y-4">
+                {/* 2. TRANSACTION PACKETS MONITOR */}
+                <div className="bg-[#0D111A] border border-slate-800 rounded-xl shadow-xl p-6 space-y-4">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-semibold flex items-center space-x-2">
-                      <Layers className="w-5 h-5 text-[#aa2d00]" />
+                    <h3 className="text-base font-semibold flex items-center space-x-2 text-white">
+                      <RefreshCw className="w-5 h-5 text-[#fcab79] animate-spin-slow" />
+                      <span>{t.brokerMonitorTitle}</span>
+                    </h3>
+                    <span className="text-[10.5px] text-slate-400 font-mono tracking-wider">{t.brokerMonitorSubtitle}</span>
+                  </div>
+
+                  <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+                    {messages.length === 0 ? (
+                      <div className="text-center py-12 border border-dashed border-slate-800 rounded-lg">
+                        <p className="text-xs text-slate-500 italic">{t.brokerMonitorEmpty}</p>
+                      </div>
+                    ) : (
+                      [...messages].reverse().map((msg) => (
+                        <div
+                          key={msg.id}
+                          className={`p-4 rounded-xl border text-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-3 transition-all ${
+                            msg.status === 'queued' ? 'bg-orange-950/15 border-orange-900/40 text-orange-200' :
+                            msg.status === 'broker_delivering' ? 'bg-yellow-950/15 border-yellow-900/40 text-yellow-200' :
+                            msg.status === 'processing' ? 'bg-blue-950/15 border-blue-900/40 text-blue-200' :
+                            msg.status === 'acked' ? 'bg-emerald-950/15 border-emerald-900/40 text-emerald-200' :
+                            msg.status === 'nacked' ? 'bg-red-950/15 border-red-900/40 text-red-200' :
+                            'bg-slate-900/40 border-slate-800 text-slate-300'
+                          }`}
+                        >
+                          <div className="space-y-1 min-w-0 flex-1">
+                            <div className="flex items-center space-x-2 flex-wrap gap-1">
+                              <span className="font-mono font-bold text-[9px] uppercase bg-slate-950 border border-slate-800 px-1.5 py-0.5 rounded text-slate-300">
+                                UUID: {msg.id.slice(0, 8)}
+                              </span>
+                              <span className="font-semibold text-xs text-slate-100">{msg.title}</span>
+                              {msg.retryCount > 0 && (
+                                <span className="px-1.5 py-0.5 bg-amber-955/80 text-amber-400 border border-amber-900/40 text-[9px] font-semibold rounded animate-pulse">
+                                  {t.brokerRetryTag} x{msg.retryCount}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-slate-300 text-[11px] leading-relaxed max-w-xl truncate">
+                              {msg.message}
+                            </p>
+                            <div className="text-[10px] text-slate-500 font-mono flex items-center gap-1">
+                              <span className="text-slate-600">METADATA:</span>
+                              <span className="truncate max-w-md">{JSON.stringify(msg.metadata)}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col items-end space-y-1.5 justify-center shrink-0 self-stretch md:self-auto border-t md:border-t-0 border-slate-800/60 pt-2 md:pt-0">
+                            {/* Operational Status tags */}
+                            <span className="text-[11px] font-semibold tracking-wide uppercase font-mono">
+                              {msg.status === 'queued' && <span className="text-orange-400">{t.brokerStatusIntake}</span>}
+                              {msg.status === 'broker_delivering' && <span className="text-yellow-405 text-yellow-455 text-yellow-400">{t.brokerStatusRouting}</span>}
+                              {msg.status === 'processing' && <span className="text-sky-400">{t.brokerStatusWorker}</span>}
+                              {msg.status === 'acked' && <span className="text-emerald-400">{t.brokerStatusAck}</span>}
+                              {msg.status === 'nacked' && <span className="text-red-400">{t.brokerStatusNack}</span>}
+                              {msg.status === 'dead_letter' && <span className="text-purple-400">{t.brokerStatusDead}</span>}
+                            </span>
+
+                            {/* Actions needed if manual ack is on */}
+                            {msg.status === 'processing' && !consumerSettings.autoAck && (
+                              <div className="flex space-x-1.5 mt-1">
+                                <button
+                                  onClick={() => manualAck(msg)}
+                                  className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[10px] font-bold tracking-wide transition-colors"
+                                >
+                                  ACK
+                                </button>
+                                <button
+                                  onClick={() => manualNack(msg)}
+                                  className="px-2.5 py-1 bg-red-650 bg-red-600 hover:bg-red-700 text-white rounded text-[10px] font-bold tracking-wide transition-colors"
+                                >
+                                  NACK
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* 3. STDOUT SYSTEM LOGGING CONSOLE TERMINAL */}
+                <div className="bg-[#05060A]/95 rounded-xl overflow-hidden shadow-2xl border border-slate-800/80">
+                  <div className="px-5 py-3 border-b border-slate-800/60 bg-[#0A0D14] flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Terminal className="font-semibold text-[#fcab79] w-4 h-4" />
+                      <span className="text-xs font-mono font-bold text-slate-100 tracking-wider">
+                        system_terminal_trace.log
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => setLogs([])}
+                      className="text-[10px] text-slate-400 border border-slate-800 px-2 py-0.5 rounded hover:text-white hover:bg-slate-800 transition-colors"
+                    >
+                      {t.stdoutClearBtn}
+                    </button>
+                  </div>
+
+                  <div 
+                    ref={scrollRef}
+                    className="p-4 font-mono text-[11px] leading-relaxed h-[240px] overflow-y-auto space-y-2 text-slate-300"
+                  >
+                    {logs.length === 0 ? (
+                      <p className="text-slate-500 italic text-center py-10">{t.stdoutNoStreams}</p>
+                    ) : (
+                      logs.map((log) => {
+                        const serviceLower = log.service.toLowerCase();
+                        let badgeColor = 'text-sky-455 text-sky-404 text-sky-400 bg-sky-955/40 border-sky-900/40';
+                        if (serviceLower === 'broker' || serviceLower === 'rabbitmq') {
+                          badgeColor = 'text-purple-400 bg-purple-950/40 border-purple-900/40';
+                        } else if (serviceLower === 'consumer') {
+                          badgeColor = 'text-amber-400 bg-amber-955/40 border-amber-900/40';
+                        } else if (serviceLower === 'notification') {
+                          badgeColor = 'text-indigo-400 bg-indigo-950/40 border-indigo-900/40';
+                        } else if (serviceLower === 'producer') {
+                          badgeColor = 'text-sky-400 bg-sky-955/40 border-sky-900/40';
+                        } else {
+                          badgeColor = 'text-slate-400 bg-slate-900/40 border-slate-800/40';
+                        }
+
+                        let levelIcon = <span className="text-slate-500">💡</span>;
+                        if (log.type === 'success' ? true : false) levelIcon = <span className="text-emerald-400">✅</span>;
+                        if (log.type === 'warn' ? true : false) levelIcon = <span className="text-amber-400">⚠️</span>;
+                        if (log.type === 'error' ? true : false) levelIcon = <span className="text-red-400">🚨</span>;
+
+                        return (
+                          <div key={log.id} className="flex items-start space-x-2 border-b border-white/5 pb-1 select-all hover:bg-white/5 p-0.5 rounded">
+                            <span className="text-slate-500 shrink-0 select-none">[{log.timestamp}]</span>
+                            <span className={`font-mono font-bold uppercase tracking-wider text-[9px] px-1.5 py-0.2 select-none rounded border shrink-0 ${badgeColor}`}>
+                              {log.service}
+                            </span>
+                            <span className="shrink-0">{levelIcon}</span>
+                            <span className={`flex-1 ${
+                              log.type === 'success' ? 'text-green-400' :
+                              log.type === 'warn' ? 'text-yellow-350' :
+                              log.type === 'error' ? 'text-red-400 font-medium' :
+                              'text-slate-250 text-slate-200'
+                            }`}>
+                              {log.text}
+                            </span>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+
+              </div>
+
+              {/* RIGHT ASPECT SIDEBAR COLUMN: Payload Ingestion tool + subscribers roster + Mock Phone */}
+              <div className="xl:col-span-4 space-y-6">
+
+                {/* 1. EVENT INGESTION TOOL */}
+                <div className="bg-[#0D111A] border border-slate-800 rounded-xl shadow-xl p-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-base font-semibold flex items-center space-x-2 text-white">
+                      <Layers className="w-5 h-5 text-[#fcab79]" />
                       <span>{t.ingestPayloadTitle}</span>
-                    </h2>
-                    <span className="text-[11px] uppercase tracking-widest text-[#717680] font-bold">{t.producerApiLabel}</span>
+                    </h3>
+                    <span className="text-[10px] uppercase tracking-wider text-slate-450 text-slate-400 font-bold">{t.producerApiLabel}</span>
                   </div>
 
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-xs font-semibold text-[#181d26] uppercase tracking-wider mb-1">
+                      <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
                         {t.messageEventTitle}
                       </label>
                       <input
                         type="text"
                         value={inputs.title}
                         onChange={(e) => setInputs({ ...inputs, title: e.target.value })}
-                        className="w-full text-sm rounded-lg border border-[#dddddd] px-3 py-2 bg-white text-[#181d26] focus:outline-none focus:border-[#aa2d00]"
+                        className="w-full text-xs rounded-lg border border-slate-800 px-3 py-2 bg-slate-950 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-orange-500"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-[#181d26] uppercase tracking-wider mb-1">
+                      <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
                         {t.payloadNotificationMessage}
                       </label>
                       <textarea
                         rows={3}
                         value={inputs.message}
                         onChange={(e) => setInputs({ ...inputs, message: e.target.value })}
-                        className="w-full text-sm rounded-lg border border-[#dddddd] px-3 py-2 bg-white text-[#181d26] focus:outline-none focus:border-[#aa2d00]"
+                        className="w-full text-xs rounded-lg border border-slate-800 px-3 py-2 bg-slate-950 text-slate-100 placeholder-slate-605 placeholder-slate-600 focus:outline-none focus:border-orange-500 leading-relaxed"
                       />
                     </div>
 
                     <div>
                       <div className="flex justify-between items-center mb-1">
-                        <label className="block text-xs font-semibold text-[#181d26] uppercase tracking-wider">
+                        <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
                           {t.contextJsonMetadata}
                         </label>
-                        <span className="text-[10px] text-gray-400 font-mono">JSON format</span>
+                        <span className="text-[9px] text-slate-500 font-mono">JSON struct</span>
                       </div>
                       <textarea
-                        rows={4}
+                        rows={3}
                         value={inputs.metadata}
                         onChange={(e) => setInputs({ ...inputs, metadata: e.target.value })}
-                        className="w-full text-sm font-mono rounded-lg border border-[#dddddd] px-3 py-2 bg-gray-50 text-gray-800 focus:outline-none focus:border-[#aa2d00]"
+                        className="w-full text-xs font-mono rounded-lg border border-slate-800 px-3 py-2 bg-slate-950 text-slate-205 text-slate-200 focus:outline-none focus:border-orange-500"
                       />
                     </div>
                   </div>
 
                   <button
                     onClick={dispatchMessage}
-                    className="w-full py-3 bg-[#aa2d00] hover:bg-[#802200] text-white rounded-lg text-sm font-semibold tracking-wide shadow transition-all flex items-center justify-center space-x-2"
+                    className="w-full py-2.5 bg-[#aa2d00] hover:bg-[#802200] active:scale-[0.99] text-white rounded-lg text-xs font-bold tracking-wider shadow transition-all flex items-center justify-center space-x-2 uppercase"
                   >
-                    <Send className="w-4 h-4" />
+                    <Send className="w-3.5 h-3.5" />
                     <span>{t.publishEventBtn}</span>
                   </button>
                 </div>
 
-                {/* ACTIVE TELEGRAM SUBSCRIBERS ROSTER */}
-                <div className="bg-white border border-[#dddddd] rounded-xl shadow-sm p-6 space-y-4">
+                {/* 2. ACTIVE TELEGRAM SUBSCRIBERS ROSTER */}
+                <div className="bg-[#0D111A] border border-slate-800 rounded-xl shadow-xl p-6 space-y-4">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-semibold flex items-center space-x-2 text-[#0a2e0e]">
+                    <h3 className="text-base font-semibold flex items-center space-x-2 text-[#34d399]">
                       <Users className="w-5 h-5" />
                       <span>{t.subscribersRosterTitle} ({subscribers.length})</span>
-                    </h2>
-                    <span className="text-[11px] uppercase tracking-widest text-[#0a2e0e] bg-emerald-100 rounded px-2 py-0.5 font-bold">
-                      Polling Active
+                    </h3>
+                    <span className="text-[10px] uppercase tracking-widest text-[#34d399] bg-[#052e16]/60 border border-emerald-950 px-2 py-0.5 rounded font-mono">
+                      Real-time Poll
                     </span>
                   </div>
 
-                  <p className="text-xs text-[#717680] leading-relaxed">
+                  <p className="text-xs text-slate-400 leading-relaxed">
                     {t.subscribersSubtitle}
                   </p>
 
-                  <div className="space-y-2.5 max-h-[220px] overflow-y-auto pr-1">
+                  <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
                     {subscribers.length === 0 ? (
-                      <div className="p-4 border border-dashed border-[#dddddd] rounded-lg bg-gray-50 text-center space-y-1.5">
-                        <p className="text-xs text-semibold text-gray-400">{t.subscribersEmpty}</p>
-                        <p className="text-[11px] text-[#717680] leading-normal">
+                      <div className="p-5 border border-dashed border-slate-800 rounded-lg bg-[#05060A]/60 text-center space-y-1.5">
+                        <p className="text-xs font-semibold text-slate-500">{t.subscribersEmpty}</p>
+                        <p className="text-[11px] text-slate-400 leading-normal">
                           {t.subscribersHelp}
                         </p>
                       </div>
@@ -931,8 +1143,8 @@ export default function App() {
                             }}
                             className={`p-3 rounded-lg border cursor-pointer select-none transition-all flex items-center justify-between gap-3 ${
                               isChecked 
-                                ? 'border-[#0a2e0e] bg-emerald-50/40 text-emerald-950 shadow-sm' 
-                                : 'border-[#dddddd] bg-white hover:bg-gray-50 text-gray-800'
+                                ? 'border-emerald-500 bg-emerald-950/20 text-emerald-200' 
+                                : 'border-slate-800/80 bg-slate-900/50 hover:bg-slate-900 text-slate-300'
                             }`}
                           >
                             <div className="flex items-center space-x-2.5 min-w-0 flex-1">
@@ -940,23 +1152,23 @@ export default function App() {
                                 type="checkbox"
                                 checked={isChecked}
                                 onChange={() => {}} // toggled on row click
-                                className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 accent-[#0a2e0e]"
+                                className="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500 focus:ring-offset-[#0d111a] accent-emerald-500 bg-slate-950 border-slate-800"
                               />
                               <div className="min-w-0 flex-1">
-                                <div className="flex items-center space-x-1.5">
-                                  <span className="font-bold text-xs truncate">
+                                <div className="flex items-center space-x-1.5 flex-wrap">
+                                  <span className="font-bold text-xs truncate text-slate-100">
                                     {sub.name}
                                   </span>
                                   {sub.username && (
-                                    <span className="text-[10px] text-emerald-700 font-mono">
+                                    <span className="text-[10px] text-emerald-400 font-mono">
                                       @{sub.username}
                                     </span>
                                   )}
                                 </div>
-                                <div className="flex flex-col text-[10px] text-gray-500 font-mono mt-0.5">
-                                  <span>ID: {sub.id}</span>
+                                <div className="flex flex-col text-[10px] text-slate-500 font-mono mt-0.5">
+                                  <span>CHATID: {sub.id}</span>
                                   {sub.lastTextReceived && (
-                                    <span className="text-[10.5px] italic text-slate-700 font-sans mt-0.5 truncate max-w-xs">
+                                    <span className="text-[10.5px] italic text-slate-400 font-sans mt-0.5 truncate max-w-xs block">
                                       «{sub.lastTextReceived}»
                                     </span>
                                   )}
@@ -969,7 +1181,7 @@ export default function App() {
                                 e.stopPropagation();
                                 deleteSubscriber(sub.id);
                               }}
-                              className="p-1 hover:bg-red-100 rounded text-red-600 hover:text-red-800 transition-colors"
+                              className="p-1 hover:bg-red-950/40 border border-transparent hover:border-red-900/50 rounded text-red-400 hover:text-red-300 transition-colors shrink-0"
                               title="Delete recipient"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -981,93 +1193,93 @@ export default function App() {
                   </div>
 
                   {/* MINI FORM TO REGISTER MANUALLY */}
-                  <form onSubmit={registerSubscriberManually} className="pt-3 border-t border-[#dddddd] space-y-2">
-                    <span className="block text-[11px] font-semibold text-gray-500 uppercase">{t.subscribersManualRegisterTitle}</span>
+                  <form onSubmit={registerSubscriberManually} className="pt-3 border-t border-slate-800/80 space-y-2">
+                    <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t.subscribersManualRegisterTitle}</span>
                     <div className="grid grid-cols-2 gap-2">
                       <input
                         type="text"
                         placeholder={t.subscribersManualChatIdPlaceholder}
                         value={newChatId}
                         onChange={(e) => setNewChatId(e.target.value)}
-                        className="text-xs bg-white text-gray-800 border border-[#dddddd] rounded px-2.5 py-1.5 focus:outline-none focus:border-[#aa2d00]"
+                        className="text-xs bg-slate-950 text-slate-100 border border-slate-800 rounded px-2.5 py-1.5 placeholder-slate-650 focus:outline-none focus:border-emerald-500"
                       />
                       <input
                         type="text"
                         placeholder={t.subscribersManualNamePlaceholder}
                         value={newName}
                         onChange={(e) => setNewName(e.target.value)}
-                        className="text-xs bg-white text-gray-800 border border-[#dddddd] rounded px-2.5 py-1.5 focus:outline-none focus:border-[#aa2d00]"
+                        className="text-xs bg-slate-950 text-slate-100 border border-slate-800 rounded px-2.5 py-1.5 placeholder-slate-650 focus:outline-none focus:border-emerald-500"
                       />
                     </div>
                     <button
                       type="submit"
                       disabled={isRegisteringSub || !newChatId}
-                      className="w-full py-1.5 border border-[#dddddd] bg-[#fafafa] hover:bg-gray-100 disabled:opacity-50 text-xs text-gray-800 font-semibold rounded flex items-center justify-center space-x-1"
+                      className="w-full py-1.5 border border-slate-800 bg-[#05060A] hover:bg-slate-900 disabled:opacity-40 text-xs text-slate-200 font-semibold rounded flex items-center justify-center space-x-1 hover:text-white transition-colors"
                     >
-                      <Plus className="w-3 h-3" />
+                      <Plus className="w-3 h-3 text-emerald-400 font-bold" />
                       <span>{isRegisteringSub ? t.subscribersManualAddingBtn : t.subscribersManualAddBtn}</span>
                     </button>
                   </form>
                 </div>
 
-                {/* CONSUMER FAULT INDUCTION DECK */}
-                <div className="bg-white border border-[#dddddd] rounded-xl shadow-sm p-6 space-y-4">
+                {/* 3. CONSUMER FAULT INDUCTION DECK */}
+                <div className="bg-[#0D111A] border border-slate-800 rounded-xl shadow-xl p-6 space-y-4">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-semibold flex items-center space-x-2 text-[#333840]">
-                      <Terminal className="w-5 h-5" />
+                    <h3 className="text-base font-semibold flex items-center space-x-2 text-slate-100">
+                      <Terminal className="w-5 h-5 text-amber-500" />
                       <span>{t.faultDeckTitle}</span>
-                    </h2>
-                    <span className="text-[11px] uppercase tracking-widest text-[#717680] font-bold">{t.faultDeckLabel}</span>
+                    </h3>
+                    <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">{t.faultDeckLabel}</span>
                   </div>
 
-                  <div className="space-y-4 text-sm">
+                  <div className="space-y-4 text-xs">
                     {/* Auto-acknowledge toggle */}
-                    <div className="flex items-center justify-between p-3.5 rounded-lg border border-[#dddddd] bg-[#fafafa]">
+                    <div className="flex items-center justify-between p-3.5 rounded-lg border border-slate-800 bg-slate-900/50">
                       <div>
-                        <span className="font-semibold block text-xs">{t.manualAckTitle}</span>
-                        <span className="text-[11px] text-[#717680]">
+                        <span className="font-semibold block text-xs text-slate-200">{t.manualAckTitle}</span>
+                        <span className="text-[11px] text-slate-400 font-sans">
                           {t.manualAckDesc}
                         </span>
                       </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
+                      <label className="relative inline-flex items-center cursor-pointer select-none">
                         <input
                           type="checkbox"
                           checked={!consumerSettings.autoAck}
                           onChange={(e) => setConsumerSettings({ ...consumerSettings, autoAck: !e.target.checked })}
                           className="sr-only peer"
                         />
-                        <div className="w-9 h-5 bg-gray-200 hover:bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#aa2d00]" />
+                        <div className="w-9 h-5 bg-slate-850 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-transparent after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-600" />
                       </label>
                     </div>
 
                     {/* Simulate network failure */}
                     <div className={`flex items-center justify-between p-3.5 rounded-lg border transition-all ${
                       consumerSettings.simulateError 
-                        ? 'border-red-300 bg-red-50 text-[#802200]' 
-                        : 'border-[#dddddd] bg-white text-[#181d26]'
+                        ? 'border-red-900/60 bg-red-955/10 text-red-200' 
+                        : 'border-slate-800 bg-slate-900/50 text-slate-350'
                     }`}>
                       <div>
-                        <span className="font-semibold block text-xs">{t.simulateErrTitle}</span>
-                        <span className="text-[11px] text-[#717680]">
+                        <span className="font-semibold block text-xs text-slate-200">{t.simulateErrTitle}</span>
+                        <span className="text-[11px] text-slate-400 font-sans">
                           {t.simulateErrDesc}
                         </span>
                       </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
+                      <label className="relative inline-flex items-center cursor-pointer select-none">
                         <input
                           type="checkbox"
                           checked={consumerSettings.simulateError}
                           onChange={(e) => setConsumerSettings({ ...consumerSettings, simulateError: e.target.checked })}
                           className="sr-only peer"
                         />
-                        <div className="w-9 h-5 bg-gray-200 hover:bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600" />
+                        <div className="w-9 h-5 bg-slate-850 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-transparent after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600" />
                       </label>
                     </div>
 
                     {/* Delay settings */}
-                    <div>
+                    <div className="space-y-1">
                       <div className="flex justify-between text-xs font-semibold mb-1">
-                        <span>{t.consumerLatencyLabel}</span>
-                        <span className="font-mono text-[#aa2d00]">{consumerSettings.processingDelayMs} milliseconds</span>
+                        <span className="text-slate-400">{t.consumerLatencyLabel}</span>
+                        <span className="font-mono text-orange-400">{consumerSettings.processingDelayMs} ms</span>
                       </div>
                       <input
                         type="range"
@@ -1076,7 +1288,7 @@ export default function App() {
                         step={100}
                         value={consumerSettings.processingDelayMs}
                         onChange={(e) => setConsumerSettings({ ...consumerSettings, processingDelayMs: Number(e.target.value) })}
-                        className="w-full accent-[#aa2d00]"
+                        className="w-full accent-orange-500 cursor-pointer bg-slate-800 h-1.5 rounded-lg appearance-none"
                       />
                     </div>
                   </div>
@@ -1084,159 +1296,25 @@ export default function App() {
 
               </div>
 
-              {/* RIGHT COLUMN (Span 7): Queue monitor + Live logs + Telegram Mock Phone */}
-              <div className="lg:col-span-7 space-y-6">
-                
-                {/* ACTIVE MESSAGE QUEUE TRACKER */}
-                <div className="bg-white border border-[#dddddd] rounded-xl shadow-sm p-6 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-semibold flex items-center space-x-2">
-                      <RefreshCw className="w-5 h-5 text-[#aa2d00]" />
-                      <span>{t.brokerMonitorTitle}</span>
-                    </h2>
-                    <span className="text-[10px] text-[#717680] font-mono">{t.brokerMonitorSubtitle}</span>
-                  </div>
-
-                  <div className="space-y-3 max-h-[280px] overflow-y-auto pr-1">
-                    {messages.length === 0 ? (
-                      <div className="text-center py-10 border border-dashed border-[#dddddd] rounded-lg">
-                        <p className="text-sm text-[#717680]">{t.brokerMonitorEmpty}</p>
-                      </div>
-                    ) : (
-                      [...messages].reverse().map((msg) => (
-                        <div
-                          key={msg.id}
-                          className={`p-4 rounded-lg border text-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-3 transition-all ${
-                            msg.status === 'queued' ? 'bg-orange-50 border-orange-200 text-orange-950' :
-                            msg.status === 'broker_delivering' ? 'bg-yellow-50 border-yellow-200 text-yellow-950' :
-                            msg.status === 'processing' ? 'bg-blue-50 border-blue-200 text-blue-950' :
-                            msg.status === 'acked' ? 'bg-green-50 border-green-200 text-green-950' :
-                            msg.status === 'nacked' ? 'bg-red-50 border-red-200 text-red-950' :
-                            'bg-gray-100 border-gray-300 text-gray-800'
-                          }`}
-                        >
-                          <div className="space-y-1">
-                            <div className="flex items-center space-x-2">
-                              <span className="font-mono font-semibold text-[10px] uppercase bg-white/70 px-1 py-0.5 rounded border border-black/10">
-                                {msg.id}
-                              </span>
-                              <span className="font-semibold text-xs">{msg.title}</span>
-                              {msg.retryCount > 0 && (
-                                <span className="px-1.5 py-0.5 bg-yellow-100 text-yellow-800 text-[9px] font-semibold rounded animate-pulse">
-                                  {t.brokerRetryTag} x{msg.retryCount}
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-[#333840] text-[11px] leading-relaxed max-w-md">
-                              {msg.message}
-                            </p>
-                            <div className="text-[10px] text-gray-400 font-mono">
-                              {t.brokerMetadataLabel} {JSON.stringify(msg.metadata)}
-                            </div>
-                          </div>
-
-                          <div className="flex flex-col items-end space-y-1.5 self-stretch md:self-auto justify-center">
-                            {/* Operational Status tags */}
-                            <span className="text-[11px] font-semibold">
-                              {msg.status === 'queued' && t.brokerStatusIntake}
-                              {msg.status === 'broker_delivering' && t.brokerStatusRouting}
-                              {msg.status === 'processing' && t.brokerStatusWorker}
-                              {msg.status === 'acked' && t.brokerStatusAck}
-                              {msg.status === 'nacked' && t.brokerStatusNack}
-                              {msg.status === 'dead_letter' && t.brokerStatusDead}
-                            </span>
-
-                            {/* Actions needed if manual ack is on */}
-                            {msg.status === 'processing' && !consumerSettings.autoAck && (
-                              <div className="flex space-x-1 mt-1">
-                                <button
-                                  onClick={() => manualAck(msg)}
-                                  className="px-2 py-1 bg-green-700 text-white rounded text-[10px] font-semibold hover:bg-green-800 transition-colors"
-                                >
-                                  ACK
-                                </button>
-                                <button
-                                  onClick={() => manualNack(msg)}
-                                  className="px-2 py-1 bg-red-600 text-white rounded text-[10px] font-semibold hover:bg-red-700 transition-colors"
-                                >
-                                  NACK
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-
-                {/* LOGGING CONSOLE TERMINAL */}
-                <div className="bg-[#181d26] rounded-xl overflow-hidden shadow-md border border-[#2d3139]">
-                  <div className="px-5 py-3 border-b border-[#2d3139] bg-[#1d222b] flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Terminal className="w-4 h-4 text-[#fcab79]" />
-                      <span className="text-xs font-mono font-bold text-white tracking-wider">
-                        {t.stdoutTitle}
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => setLogs([])}
-                      className="text-[10px] text-[#717680] border border-[#2d3139] px-2 py-0.5 rounded hover:text-white transition-colors"
-                    >
-                      {t.stdoutClearBtn}
-                    </button>
-                  </div>
-
-                  <div className="p-4 font-mono text-[11px] leading-relaxed h-[240px] overflow-y-auto space-y-2 text-gray-300">
-                    {logs.length === 0 ? (
-                      <p className="text-gray-500 italic text-center py-10">{t.stdoutNoStreams}</p>
-                    ) : (
-                      logs.map((log) => (
-                        <div key={log.id} className="flex items-start space-x-1.5 border-b border-white/5 pb-1 select-all">
-                          <span className="text-gray-500">[{log.timestamp}]</span>
-                          <span className={`font-bold uppercase tracking-wider text-[10px] px-1 py-0.1 select-none rounded ${
-                            log.service === 'Producer' ? 'bg-sky-900/45 text-sky-300' :
-                            log.service === 'Broker' ? 'bg-amber-900/45 text-amber-300' :
-                            log.service === 'Consumer' ? 'bg-indigo-900/45 text-indigo-300' :
-                            log.service === 'Notification' ? 'bg-emerald-900/45 text-emerald-300' :
-                            'bg-gray-800 text-gray-300'
-                          }`}>
-                            {log.service}
-                          </span>
-                          <span className={
-                            log.type === 'success' ? 'text-green-400' :
-                            log.type === 'warn' ? 'text-yellow-400' :
-                            log.type === 'error' ? 'text-red-400' :
-                            'text-gray-300'
-                          }>
-                            {log.text}
-                          </span>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-
-              </div>
             </div>
 
             {/* TG TELEGRAM SCREEN PHONE DISPLAY EMULATOR */}
-            <div className="bg-[#f5e9d4]/30 rounded-xl border border-[#dddddd] p-8 mt-12 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+            <div className="bg-[#0D111A] rounded-xl border border-slate-805 border-slate-800 p-8 mt-12 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
               <div className="md:col-span-7 space-y-4">
-                <div className="inline-flex items-center space-x-1.5 text-xs text-[#0a2e0e] bg-green-100 px-3 py-1 rounded-full font-bold border border-green-200">
+                <div className="inline-flex items-center space-x-1.5 text-xs text-emerald-400 bg-emerald-950/40 px-3 py-1 rounded-full font-bold border border-emerald-900/30">
                    <Bot className="w-3.5 h-3.5" />
                   <span>{t.sandboxBadge}</span>
                 </div>
-                <h3 className="text-2xl font-semibold tracking-tight text-[#181d26]">
+                <h3 className="text-2xl font-semibold tracking-tight text-white">
                   {t.sandboxTitle}
                 </h3>
-                <p className="text-sm text-[#333840] leading-relaxed">
+                <p className="text-sm text-slate-300 leading-relaxed">
                   {t.sandboxDesc}
                 </p>
 
-                <div className="bg-white/80 rounded-lg p-4 border border-[#dddddd] text-xs">
-                  <h4 className="font-semibold text-xs mb-1.5 text-[#aa2d00]">{t.sandboxGuideTitle}</h4>
-                  <ol className="list-decimal list-inside space-y-1 text-gray-600 font-medium">
+                <div className="bg-[#05060A]/85 rounded-xl border border-slate-800/80 p-4 text-xs">
+                  <h4 className="font-semibold text-xs mb-1.5 text-[#fcab79]">{t.sandboxGuideTitle}</h4>
+                  <ol className="list-decimal list-inside space-y-1 text-slate-300 font-normal">
                     <li>{t.sandboxGuideStep1}</li>
                     <li>{t.sandboxGuideStep2}</li>
                     <li>{t.sandboxGuideStep3}</li>
@@ -1253,18 +1331,18 @@ export default function App() {
                   </div>
 
                   {/* Inside Screen Content */}
-                  <div className="h-full bg-[#8fa4b4] p-4 pt-8 flex flex-col justify-between overflow-hidden relative" style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1579547621113-e4bb2a19bdd6?q=80&w=300&auto=format&fit=crop)' }}>
-                    <div className="absolute inset-0 bg-[#eef1f5]/85 opacity-90 z-0" />
+                  <div className="h-full bg-slate-950 p-4 pt-8 flex flex-col justify-between overflow-hidden relative">
+                    <div className="absolute inset-0 bg-slate-950/95 z-0" />
                     
                     {/* Header */}
-                    <div className="relative z-10 flex items-center justify-between border-b pb-2 mb-2 border-[#181d26]/10">
+                    <div className="relative z-10 flex items-center justify-between border-b pb-2 mb-2 border-slate-800/80">
                       <div className="flex items-center space-x-2">
                         <div className="w-7 h-7 bg-sky-600 rounded-full flex items-center justify-center text-white text-[10px] font-bold">
                           TG
                         </div>
                         <div>
-                          <p className="font-bold text-[11px] text-[#181d26]">Microservice Alert Bot</p>
-                          <p className="text-[9px] text-[#0a2e0e] font-semibold">@nest_rmq_notification_bot</p>
+                          <p className="font-bold text-[11px] text-white">Microservice Alert Bot</p>
+                          <p className="text-[9px] text-emerald-400 font-semibold">@nest_rmq_notification_bot</p>
                         </div>
                       </div>
                     </div>
@@ -1272,7 +1350,7 @@ export default function App() {
                     {/* Messages Panel */}
                     <div className="relative z-10 flex-1 overflow-y-auto space-y-2 pr-1 pt-1 flex flex-col justify-end w-full">
                       {messages.filter(m => m.status === 'acked' || m.status === 'processing').length === 0 ? (
-                        <p className="text-gray-400 italic text-center py-10 text-[11px]">{t.sandboxEmptyText}</p>
+                        <p className="text-slate-500 italic text-center py-10 text-[11px]">{t.sandboxEmptyText}</p>
                       ) : (
                         messages
                           .filter(m => m.status === 'acked' || m.status === 'processing')
@@ -1280,13 +1358,13 @@ export default function App() {
                           .map((msgRef) => (
                             <div
                               key={msgRef.id}
-                              className="bg-white rounded-xl p-3 shadow-sm border border-black/5 max-w-[90%] text-[11px] text-gray-800 animate-slide-up self-start"
+                              className="bg-[#111622] rounded-xl p-3 shadow-sm border border-slate-800 max-w-[90%] text-[11px] text-slate-200 animate-slide-up self-start"
                             >
-                              <div className="font-bold text-xs text-[#aa2d00] flex items-center space-x-1 mb-1">
+                              <div className="font-bold text-xs text-[#fcab79] flex items-center space-x-1 mb-1">
                                 <span>🔔 {msgRef.title}</span>
                               </div>
                               <p className="leading-normal mb-1">{msgRef.message}</p>
-                              <p className="text-[8px] text-[#717680] text-right font-mono">
+                              <p className="text-[8px] text-slate-505 text-slate-500 text-right font-mono">
                                 ID: {msgRef.id} • {new Date().toLocaleTimeString()}
                               </p>
                             </div>
@@ -1295,8 +1373,8 @@ export default function App() {
                     </div>
 
                     {/* Bottom Phone Bar */}
-                    <div className="relative z-10 pt-2 border-t border-[#181d26]/10 mt-2 flex items-center justify-between">
-                      <div className="text-[9px] bg-white text-gray-500 rounded-full w-full py-1 px-3 text-center">
+                    <div className="relative z-10 pt-2 border-t border-slate-800/80 mt-2 flex items-center justify-between">
+                      <div className="text-[9px] bg-[#05060A] border border-slate-800/80 text-slate-400 rounded-full w-full py-1 px-3 text-center">
                         {t.sandboxConsoleLabel}
                       </div>
                     </div>
@@ -1310,17 +1388,17 @@ export default function App() {
 
         {activeTab === 'code' && (
           <div className="space-y-8" id="view_code">
-            <div className="p-6 bg-white border border-[#dddddd] rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="p-6 bg-[#0D111A] border border-slate-800 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-xl">
               <div>
-                <h2 className="text-lg font-semibold text-[#181d26]">NestJS Web Ide & Microservices Workspace</h2>
-                <p className="text-sm text-[#717680]">
+                <h2 className="text-lg font-semibold text-white">NestJS Web Ide & Microservices Workspace</h2>
+                <p className="text-sm text-slate-300">
                   This folder structure displays pristine production components obeying SOLID design patterns. Choose a file below to explore and clone.
                 </p>
               </div>
               <div className="flex space-x-2">
                 <button
                   onClick={handleCopyCode}
-                  className="px-4 py-2 bg-[#181d26] hover:bg-[#0d1218] text-white rounded-lg text-xs font-semibold tracking-wide flex items-center space-x-1.5 transition-colors"
+                  className="px-4 py-2 bg-[#aa2d00] hover:bg-[#802200] text-white rounded-lg text-xs font-semibold tracking-wide flex items-center space-x-1.5 transition-colors shadow"
                 >
                   {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{copied ? 'Copied!' : 'Copy Code'}</span>
@@ -1331,13 +1409,13 @@ export default function App() {
             {/* SPLIT CODES SCREEN */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               {/* File tree sidebar */}
-              <div className="lg:col-span-4 bg-white border border-[#dddddd] rounded-xl p-4 space-y-4">
-                <span className="text-[10px] font-bold tracking-wider text-gray-400 block uppercase">Project Files Tree</span>
+              <div className="lg:col-span-4 bg-[#0D111A] border border-slate-800 rounded-xl p-4 space-y-4 shadow-xl">
+                <span className="text-[10px] font-bold tracking-wider text-slate-500 block uppercase">Project Files Tree</span>
                 
                 <div className="space-y-1.5">
                   {/* Root config blocks */}
-                  <div className="font-semibold text-xs text-gray-500 uppercase tracking-wide flex items-center space-x-1 pl-1">
-                    <Folder className="w-3.5 h-3.5" />
+                  <div className="font-semibold text-xs text-slate-400 uppercase tracking-wide flex items-center space-x-1 pl-1">
+                    <Folder className="w-3.5 h-3.5 text-slate-400" />
                     <span>Workspace Configs</span>
                   </div>
                   {CODE_FILES.slice(0, 3).map((f) => (
@@ -1346,18 +1424,18 @@ export default function App() {
                       onClick={() => setSelectedFile(f)}
                       className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium flex items-center space-x-2 transition-colors ${
                         selectedFile.path === f.path
-                          ? 'bg-[#fdf2f2] text-[#aa2d00] font-semibold shadow-sm'
-                          : 'text-[#333840] hover:bg-gray-100'
+                          ? 'bg-amber-955/25 text-[#fcab79] font-semibold border border-amber-900/40 shadow-sm'
+                          : 'text-slate-300 hover:bg-slate-800/60'
                       }`}
                     >
-                      <FileCode className="w-3.5 h-3.5 shrink-0" />
+                      <FileCode className="w-3.5 h-3.5 shrink-0 text-slate-400" />
                       <span className="truncate">{f.name}</span>
                     </button>
                   ))}
 
                   {/* Producer Service */}
-                  <div className="pt-2 font-semibold text-xs text-gray-500 uppercase tracking-wide flex items-center space-x-1 pl-1">
-                    <Folder className="w-3.5 h-3.5 text-amber-600" />
+                  <div className="pt-2 font-semibold text-xs text-slate-450 text-slate-400 uppercase tracking-wide flex items-center space-x-1 pl-1">
+                    <Folder className="w-3.5 h-3.5 text-amber-500" />
                     <span>services/producer</span>
                   </div>
                   {CODE_FILES.slice(3, 9).map((f) => (
@@ -1366,17 +1444,17 @@ export default function App() {
                       onClick={() => setSelectedFile(f)}
                       className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium flex items-center space-x-2 transition-colors ${
                         selectedFile.path === f.path
-                          ? 'bg-[#fdf2f2] text-[#aa2d00] font-semibold'
-                          : 'text-[#333840] hover:bg-gray-100'
+                          ? 'bg-amber-955/25 text-[#fcab79] font-semibold border border-amber-900/40 shadow-sm'
+                          : 'text-slate-300 hover:bg-slate-800/60'
                       }`}
                     >
-                      <ChevronRight className="w-3 h-3 shrink-0" />
+                      <ChevronRight className="w-3 h-3 shrink-0 text-slate-500" />
                       <span className="truncate">{f.name}</span>
                     </button>
                   ))}
 
                   {/* Consumer Service */}
-                  <div className="pt-2 font-semibold text-xs text-gray-500 uppercase tracking-wide flex items-center space-x-1 pl-1">
+                  <div className="pt-2 font-semibold text-xs text-slate-450 text-slate-400 uppercase tracking-wide flex items-center space-x-1 pl-1">
                     <Folder className="w-3.5 h-3.5 text-[#aa2d00]" />
                     <span>services/consumer</span>
                   </div>
@@ -1386,18 +1464,18 @@ export default function App() {
                       onClick={() => setSelectedFile(f)}
                       className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium flex items-center space-x-2 transition-colors ${
                         selectedFile.path === f.path
-                          ? 'bg-[#fdf2f2] text-[#aa2d00] font-semibold shadow-sm'
-                          : 'text-[#333840] hover:bg-gray-100'
+                          ? 'bg-amber-955/25 text-[#fcab79] font-semibold border border-amber-900/40 shadow-sm'
+                          : 'text-slate-300 hover:bg-slate-800/60'
                       }`}
                     >
-                      <ChevronRight className="w-3 h-3 shrink-0" />
+                      <ChevronRight className="w-3 h-3 shrink-0 text-slate-500" />
                       <span className="truncate">{f.name}</span>
                     </button>
                   ))}
 
                   {/* Notification service */}
-                  <div className="pt-2 font-semibold text-xs text-gray-500 uppercase tracking-wide flex items-center space-x-1 pl-1">
-                    <Folder className="w-3.5 h-3.5 text-[#0a2e0e]" />
+                  <div className="pt-2 font-semibold text-xs text-slate-450 text-slate-400 uppercase tracking-wide flex items-center space-x-1 pl-1">
+                    <Folder className="w-3.5 h-3.5 text-emerald-500" />
                     <span>services/notification</span>
                   </div>
                   {CODE_FILES.slice(13, 17).map((f) => (
@@ -1406,11 +1484,11 @@ export default function App() {
                       onClick={() => setSelectedFile(f)}
                       className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium flex items-center space-x-2 transition-colors ${
                         selectedFile.path === f.path
-                          ? 'bg-[#fdf2f2] text-[#aa2d00] font-semibold shadow-sm'
-                          : 'text-[#333840] hover:bg-gray-100'
+                          ? 'bg-amber-955/25 text-[#fcab79] font-semibold border border-amber-900/40 shadow-sm'
+                          : 'text-slate-300 hover:bg-slate-800/60'
                       }`}
                     >
-                      <ChevronRight className="w-3 h-3 shrink-0" />
+                      <ChevronRight className="w-3 h-3 shrink-0 text-slate-500" />
                       <span className="truncate">{f.name}</span>
                     </button>
                   ))}
@@ -1418,26 +1496,26 @@ export default function App() {
               </div>
 
               {/* Code viewer pane */}
-              <div className="lg:col-span-8 bg-[#181d26] rounded-xl overflow-hidden shadow-lg border border-[#2d3139] flex flex-col">
-                <div className="px-5 py-3 border-b border-[#2d3139] bg-[#1d222b] flex items-center justify-between">
+              <div className="lg:col-span-8 bg-[#0D111A] rounded-xl overflow-hidden shadow-xl border border-slate-800 flex flex-col">
+                <div className="px-5 py-3 border-b border-slate-800/80 bg-[#05060A]/95 flex items-center justify-between">
                   <div className="flex items-center space-x-2.5">
                     <div className="flex space-x-1.5">
                       <span className="w-2.5 h-2.5 bg-red-500 rounded-full" />
                       <span className="w-2.5 h-2.5 bg-yellow-500 rounded-full" />
                       <span className="w-2.5 h-2.5 bg-green-500 rounded-full" />
                     </div>
-                    <span className="font-mono text-xs text-[#dddddd]">{selectedFile.path}</span>
+                    <span className="font-mono text-xs text-slate-350 select-all">{selectedFile.path}</span>
                   </div>
-                  <span className="text-[10px] text-gray-400 uppercase font-mono tracking-wider font-semibold">
+                  <span className="text-[10px] text-slate-500 uppercase font-mono tracking-wider font-semibold">
                     {selectedFile.language}
                   </span>
                 </div>
 
-                <div className="p-5 font-mono text-xs leading-relaxed overflow-x-auto text-gray-300 max-h-[580px]">
+                <div className="p-5 font-mono text-xs leading-relaxed overflow-x-auto text-slate-300 max-h-[580px]">
                   <pre className="select-all">
                     {selectedFile.content.split('\n').map((line, idx) => (
                       <div key={idx} className="flex">
-                        <span className="text-gray-600 w-8 inline-block select-none text-right pr-3">{idx + 1}</span>
+                        <span className="text-slate-600 w-8 inline-block select-none text-right pr-3">{idx + 1}</span>
                         <span>{line}</span>
                       </div>
                     ))}
@@ -1474,50 +1552,50 @@ export default function App() {
 
             {/* DETAILED INFO GRIDS */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-              <div className="bg-white border border-[#dddddd] rounded-xl p-6 space-y-4">
-                <h3 className="text-lg font-semibold flex items-center space-x-2 text-[#333840]">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
+              <div className="bg-[#0D111A] border border-slate-800 rounded-xl p-6 space-y-4 shadow-xl">
+                <h3 className="text-lg font-semibold flex items-center space-x-2 text-white">
+                  <CheckCircle className="w-5 h-5 text-emerald-400" />
                   <span>Idempotency Mechanisms</span>
                 </h3>
-                <p className="text-xs text-[#717680] leading-relaxed">
+                <p className="text-xs text-slate-300 leading-relaxed">
                   In distributed systems, networks can drop, duplicate, or re-deliver packets. 
                   Our architecture guarantees idempotency:
                 </p>
-                <ul className="space-y-2 text-xs text-gray-700 leading-relaxed font-semibold">
+                <ul className="space-y-2 text-xs text-slate-300 leading-relaxed font-normal">
                   <li className="flex items-start">
-                    <ChevronRight className="w-4 h-4 text-orange-600 shrink-0" />
+                    <ChevronRight className="w-4 h-4 text-[#fcab79] shrink-0 mt-0.5" />
                     <span>Every ingested event triggers a unique UUID generated by the Producer.</span>
                   </li>
                   <li className="flex items-start">
-                    <ChevronRight className="w-4 h-4 text-orange-600 shrink-0" />
+                    <ChevronRight className="w-4 h-4 text-[#fcab79] shrink-0 mt-0.5" />
                     <span>The database or Consumer caches these transaction signatures during processing.</span>
                   </li>
                   <li className="flex items-start">
-                    <ChevronRight className="w-4 h-4 text-orange-600 shrink-0" />
+                    <ChevronRight className="w-4 h-4 text-[#fcab79] shrink-0 mt-0.5" />
                     <span>Duplicate packages arriving with active matching GUID tokens are automatically skipped or served from cache, preventing duplicate alerts to the customer.</span>
                   </li>
                 </ul>
               </div>
 
-              <div className="bg-white border border-[#dddddd] rounded-xl p-6 space-y-4">
-                <h3 className="text-lg font-semibold flex items-center space-x-2 text-[#333840]">
-                  <AlertTriangle className="w-5 h-5 text-amber-600" />
+              <div className="bg-[#0D111A] border border-slate-800 rounded-xl p-6 space-y-4 shadow-xl">
+                <h3 className="text-lg font-semibold flex items-center space-x-2 text-white">
+                  <AlertTriangle className="w-5 h-5 text-amber-500" />
                   <span>Broker Error Recovery & Requeuing</span>
                 </h3>
-                <p className="text-xs text-[#717680] leading-relaxed">
+                <p className="text-xs text-slate-300 leading-relaxed">
                   What happens when third-party servers (like Telegram Bot endpoints) collapse temporarily?
                 </p>
-                <ul className="space-y-2 text-xs text-gray-700 leading-relaxed font-semibold">
+                <ul className="space-y-2 text-xs text-slate-300 leading-relaxed font-normal">
                   <li className="flex items-start">
-                    <ChevronRight className="w-4 h-4 text-orange-600 shrink-0" />
+                    <ChevronRight className="w-4 h-4 text-[#fcab79] shrink-0 mt-0.5" />
                     <span>With <strong>noAck: false</strong>, RabbitMQ preserves the message until the Consumer sends an explicit <code>ack</code> code.</span>
                   </li>
                   <li className="flex items-start">
-                    <ChevronRight className="w-4 h-4 text-orange-600 shrink-0" />
+                    <ChevronRight className="w-4 h-4 text-[#fcab79] shrink-0 mt-0.5" />
                     <span>If operations fail, we issue a <code>nack</code> with <code>requeue: true</code>, putting the message back to try again later.</span>
                   </li>
                   <li className="flex items-start">
-                    <ChevronRight className="w-4 h-4 text-orange-600 shrink-0" />
+                    <ChevronRight className="w-4 h-4 text-[#fcab79] shrink-0 mt-0.5" />
                     <span>After 3 retry failures, we discard or direct messages to a <strong>Dead-Letter Queue (DLX)</strong> for operator debugging and diagnostics, keeping queues clean.</span>
                   </li>
                 </ul>
@@ -1525,28 +1603,28 @@ export default function App() {
             </div>
 
             {/* DOCKER COMPOSE CONFIG GUIDE */}
-            <div className="bg-white border border-[#dddddd] rounded-xl p-6 space-y-4">
-              <h3 className="text-lg font-semibold flex items-center space-x-2">
-                <Layers className="w-5 h-5 text-[#aa2d00]" />
+            <div className="bg-[#0D111A] border border-slate-800 rounded-xl p-6 space-y-4 shadow-xl">
+              <h3 className="text-lg font-semibold flex items-center space-x-2 text-white">
+                <Layers className="w-5 h-5 text-[#fcab79]" />
                 <span>Docker-Compose Deployment Guide</span>
               </h3>
-              <p className="text-sm text-[#717680]">
+              <p className="text-sm text-slate-300">
                 We use Docker Compose to bind all microservices and dependency networks under a single operational environment. To launch the whole project locally:
               </p>
               
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 font-mono text-xs space-y-2 text-gray-800">
-                <p className="text-[#aa2d00] font-bold"># Step 1: Clone the workspace</p>
+              <div className="bg-[#05060A]/95 border border-slate-800/80 rounded-lg p-4 font-mono text-xs space-y-2 text-slate-300">
+                <p className="text-[#fcab79] font-bold"># Step 1: Clone the workspace</p>
                 <p>git clone https://github.com/your-username/nest-rmq-telegram.git</p>
                 <p>cd nest-rmq-telegram</p>
                 <br />
-                <p className="text-[#aa2d00] font-bold"># Step 2: Configure secrets inside an .env file</p>
+                <p className="text-[#fcab79] font-bold"># Step 2: Configure secrets inside an .env file</p>
                 <p>echo "TELEGRAM_BOT_TOKEN='your_token'" &gt; .env</p>
                 <p>echo "TELEGRAM_CHAT_ID='your_chat_id'" &gt;&gt; .env</p>
                 <br />
-                <p className="text-[#aa2d00] font-bold"># Step 3: Run compose or Makefile shortcuts</p>
+                <p className="text-[#fcab79] font-bold"># Step 3: Run compose or Makefile shortcuts</p>
                 <p>make up</p>
                 <br />
-                <p className="text-green-700 font-bold"># Verified: Docker-Compose will compile images and launch RabbitMQ + 3 services!</p>
+                <p className="text-emerald-400 font-bold"># Verified: Docker-Compose will compile images and launch RabbitMQ + 3 services!</p>
               </div>
             </div>
 
@@ -1555,17 +1633,17 @@ export default function App() {
       </main>
 
       {/* 5. FOOTER */}
-      <footer className="bg-white border-t border-[#dddddd] mt-24">
+      <footer className="bg-[#05060A]/95 border-t border-slate-800 mt-24">
         <div className="max-w-7xl mx-auto px-6 py-12 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center space-x-2">
-            <div className="w-6 h-6 rounded-md bg-[#181d26] flex items-center justify-center text-white font-bold text-xs">
+            <div className="w-6 h-6 rounded-md bg-[#aa2d00] flex items-center justify-center text-white font-bold text-xs shadow-sm">
               N
             </div>
-            <span className="font-semibold text-xs tracking-wide text-gray-500">
+            <span className="font-semibold text-xs tracking-wide text-slate-405 text-slate-400">
               NestJS Microservices Workspace • Crafted in AI Studio Build
             </span>
           </div>
-          <p className="text-xs text-gray-400 font-medium">
+          <p className="text-xs text-slate-505 text-slate-500 font-medium">
             Project License: GPL-3.0-or-later • Solid clean code blocks pre-compiled 
           </p>
         </div>
