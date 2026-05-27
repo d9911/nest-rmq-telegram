@@ -62,7 +62,7 @@ export function TrafficMonitor({ t, messages, setMessages, manualAck, manualNack
               <div key={msg.id} className={`p-3.5 rounded-lg border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 transition-colors duration-200 ${cardBorder}`}>
                 <div className="space-y-1 sm:max-w-[70%] text-left font-sans">
                   <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-                    <span className="text-slate-100 font-bold text-xs">{msg.title || 'Direct Queue Transaction'}</span>
+                    <span className="text-slate-100 font-bold text-xs">{msg.title || t.directQueueTransFallback}</span>
                     <span className="text-[10px] text-slate-500 font-mono tracking-wide">#{msg.id}</span>
                     <span className={`text-[9px] font-mono font-bold tracking-wider rounded-md px-1.5 py-0.5 ${statusBadge}`}>{statusText}</span>
                   </div>
@@ -72,7 +72,7 @@ export function TrafficMonitor({ t, messages, setMessages, manualAck, manualNack
                   {/* Visualizer Metadata indicators */}
                   {Object.keys(msg.metadata).length > 0 && (
                     <div className="flex items-center space-x-1.5 pt-1 text-[10px] font-mono text-slate-500">
-                      <span>Header args:</span>
+                      <span>{t.brokerHeaderArgs}</span>
                       <span className="bg-slate-900 border border-slate-800 rounded px-1 text-slate-400">{JSON.stringify(msg.metadata)}</span>
                     </div>
                   )}
@@ -81,19 +81,22 @@ export function TrafficMonitor({ t, messages, setMessages, manualAck, manualNack
                   {msg.retryCount > 0 && (
                     <span className="text-[9.5px] text-amber-400 font-mono flex items-center gap-1.5 pt-0.5">
                       <Clock className="h-3 w-3 inline" />
-                      Automatic MQ Retry Attempts: <b className="font-extrabold">{msg.retryCount} of 2</b>
+                      {t.brokerRetryAttempts}{' '}
+                      <b className="font-extrabold">
+                        {msg.retryCount} {t.brokerOf} 2
+                      </b>
                     </span>
                   )}
                 </div>
 
                 {/* Consumer Safety Actions (Operator Handlers in case manual Acknowledge mode is active) */}
-                <div className="flex items-center gap-1.5 mt-2 sm:mt-0 shrink-0">
+                <div className="flex items-center gap-1.5 mt-2 sm:mt-0 shrink-0 font-sans">
                   {msg.status === 'processing' && !autoAck && (
                     <div className="flex items-center gap-1.5 bg-[#0A050D] p-1 rounded-lg border border-slate-800">
                       <button
                         onClick={() => manualAck(msg)}
                         className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[9.5px] uppercase tracking-wider rounded transition-all flex items-center gap-1 shadow-sm leading-none"
-                        title="Dangers: issues clean amq.ack thread response"
+                        title={t.brokerAckTooltip}
                       >
                         <CheckCircle className="w-3 h-3 text-emerald-200" />
                         <span>ACK</span>
@@ -101,7 +104,7 @@ export function TrafficMonitor({ t, messages, setMessages, manualAck, manualNack
                       <button
                         onClick={() => manualNack(msg)}
                         className="px-2.5 py-1 bg-red-600/40 hover:bg-red-500 hover:text-white text-red-300 font-semibold text-[9.5px] uppercase tracking-wider rounded transition-all flex items-center gap-1 border border-red-900/30 leading-none"
-                        title="Sends amq.nack"
+                        title={t.brokerNackTooltip}
                       >
                         <AlertTriangle className="w-3 h-3 text-red-400" />
                         <span>NACK</span>
@@ -116,10 +119,10 @@ export function TrafficMonitor({ t, messages, setMessages, manualAck, manualNack
                         setMessages((prev) => prev.map((m) => (m.id === msg.id ? { ...m, status: 'queued', retryCount: 0 } : m)))
                       }}
                       className="px-2.5 py-1 bg-[#aa2d00] hover:bg-orange-700 text-white rounded text-[10px] transition-all flex items-center space-x-1 font-semibold cursor-pointer outline-hidden"
-                      title="Resubmit envelope back to queue (amqp.publish)"
+                      title={t.brokerRequeueTooltip}
                     >
                       <RotateCcw className="w-3.5 h-3.5" />
-                      <span>Requeue</span>
+                      <span>{t.requeueBtnText}</span>
                     </button>
                   )}
 

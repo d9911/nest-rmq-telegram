@@ -24,7 +24,7 @@ export function SimulationControls({ t, consumerSettings, setConsumerSettings }:
         <div className="flex items-center justify-between p-2.5 bg-[#05060A]/60 border border-slate-800/80 rounded-lg">
           <div className="space-y-0.5 pr-2">
             <span className="font-semibold text-slate-200 block">{t.manualAckTitle}</span>
-            <span className="text-[10px] text-slate-505 text-slate-500 leading-normal">{consumerSettings.autoAck ? 'noAck: true • fast deliver' : 'noAck: false • manual status safety'}</span>
+            <span className="text-[10px] text-slate-505 text-slate-500 leading-normal font-sans">{consumerSettings.autoAck ? t.noAckTrue : t.noAckFalse}</span>
           </div>
           <button
             onClick={() => setConsumerSettings((prev) => ({ ...prev, autoAck: !prev.autoAck }))}
@@ -38,9 +38,7 @@ export function SimulationControls({ t, consumerSettings, setConsumerSettings }:
         <div className="flex items-center justify-between p-2.5 bg-[#05060A]/60 border border-slate-800/80 rounded-lg">
           <div className="space-y-0.5 pr-2">
             <span className="font-semibold text-slate-200 block">{t.simulateErrTitle}</span>
-            <span className="text-[10px] text-emerald-500 leading-normal">
-              {consumerSettings.simulateError ? 'Redirection to (DLX) Dead-Letter Queue Enabled' : 'Queue Healthy (Clean stream flow)'}
-            </span>
+            <span className="text-[10px] text-emerald-500 leading-normal font-sans">{consumerSettings.simulateError ? t.dlxEnabled : t.dlxDisabled}</span>
           </div>
           <button
             onClick={() => setConsumerSettings((prev) => ({ ...prev, simulateError: !prev.simulateError }))}

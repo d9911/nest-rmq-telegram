@@ -109,7 +109,7 @@ export function RecipientRoster({
             />
           </div>
           <div className="space-y-1">
-            <label className="text-slate-450 block text-[9.5px] font-bold text-slate-400">Username</label>
+            <label className="text-slate-450 block text-[9.5px] font-bold text-slate-400">{t.quickAddUsernameLabel}</label>
             <input
               type="text"
               className="w-full bg-[#05060A] border border-slate-800 rounded px-2 py-1 text-white text-[11px] focus:border-indigo-500"

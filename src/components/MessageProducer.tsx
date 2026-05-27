@@ -9,22 +9,27 @@ interface MessageProducerProps {
     message: string
     metadata: string
   }
-  setInputs: React.Dispatch<
-    React.SetStateAction<{
-      title: string
-      message: string
-      metadata: string
-    }>
-  >
+  setInputs: React.Dispatch<React.SetStateAction<{
+    title: string
+    message: string
+    metadata: string
+  }>>
   dispatchMessage: () => Promise<void>
 }
 
-export function MessageProducer({ t, inputs, setInputs, dispatchMessage }: MessageProducerProps) {
+export function MessageProducer({
+  t,
+  inputs,
+  setInputs,
+  dispatchMessage
+}: MessageProducerProps) {
   return (
     <div className="bg-[#000000]/20 border border-slate-800 rounded-xl p-5 space-y-4 shadow-xl text-left">
       <div className="flex items-center space-x-2 border-b border-slate-850 pb-3">
         <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
-        <h3 className="font-sans font-semibold text-white text-sm tracking-wide">{t.ingestPayloadTitle}</h3>
+        <h3 className="font-sans font-semibold text-white text-sm tracking-wide">
+          {t.ingestPayloadTitle}
+        </h3>
       </div>
 
       <div className="space-y-3.5 text-xs font-sans">
@@ -35,7 +40,7 @@ export function MessageProducer({ t, inputs, setInputs, dispatchMessage }: Messa
             type="text"
             className="w-full bg-[#05060A]/90 border border-slate-800 rounded px-3 py-2 text-white placeholder-slate-650 focus:border-amber-400 focus:outline-hidden"
             value={inputs.title}
-            onChange={(e) => setInputs((prev) => ({ ...prev, title: e.target.value }))}
+            onChange={(e) => setInputs(prev => ({ ...prev, title: e.target.value }))}
             placeholder="Event Action Title, e.g. User Signed Up"
           />
         </div>
@@ -47,7 +52,7 @@ export function MessageProducer({ t, inputs, setInputs, dispatchMessage }: Messa
             rows={3}
             className="w-full bg-[#05060A]/90 border border-slate-800 rounded px-3 py-2 text-white placeholder-slate-650 focus:border-amber-400 focus:outline-hidden resize-none leading-relaxed"
             value={inputs.message}
-            onChange={(e) => setInputs((prev) => ({ ...prev, message: e.target.value }))}
+            onChange={(e) => setInputs(prev => ({ ...prev, message: e.target.value }))}
             placeholder="Transaction telemetry text content..."
           />
         </div>
@@ -62,7 +67,7 @@ export function MessageProducer({ t, inputs, setInputs, dispatchMessage }: Messa
             rows={4}
             className="w-full bg-[#05060A]/90 border border-slate-800 rounded px-3 py-2 text-white font-mono placeholder-slate-650 focus:border-amber-400 focus:outline-hidden resize-none leading-relaxed text-[11px]"
             value={inputs.metadata}
-            onChange={(e) => setInputs((prev) => ({ ...prev, metadata: e.target.value }))}
+            onChange={(e) => setInputs(prev => ({ ...prev, metadata: e.target.value }))}
             placeholder='{\n  "priority": "high"\n}'
           />
         </div>

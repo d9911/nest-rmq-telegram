@@ -39,7 +39,7 @@ export function TerminalConsole({ t, logs, onClearLogs, scrollRef }: TerminalCon
                 filter === serviceName ? 'bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 font-bold' : 'bg-[#05060A]/40 text-slate-500 border border-transparent hover:text-slate-300'
               }`}
             >
-              {serviceName === 'all' ? 'All Streams' : serviceName}
+              {serviceName === 'all' ? t.stdoutAllStreamsTab : serviceName}
             </button>
           ))}
 
@@ -56,7 +56,7 @@ export function TerminalConsole({ t, logs, onClearLogs, scrollRef }: TerminalCon
       {/* Actual Logs Output Viewport */}
       <div ref={scrollRef} className="p-4 font-mono text-[11px] leading-relaxed h-[240px] overflow-y-auto space-y-2 text-slate-400 custom-scrollbar">
         {filteredLogs.length === 0 ? (
-          <p className="text-slate-500 italic text-center py-10">{t.stdoutEmpty}</p>
+          <p className="text-slate-505 text-slate-500 italic text-center py-10 font-sans">{t.stdoutEmpty}</p>
         ) : (
           filteredLogs.map((log) => {
             // Color mapping matching RabbitMQ & NestJS CLI styles
@@ -82,7 +82,7 @@ export function TerminalConsole({ t, logs, onClearLogs, scrollRef }: TerminalCon
             if (log.service === 'Notification') tagColor = 'text-emerald-400 font-bold'
 
             return (
-              <div key={log.id} className="flex items-start space-x-2 animate-fade-in group">
+              <div key={log.id} className="flex items-start space-x-2 animate-fade-in group text-left">
                 <span className="text-slate-600 select-none text-[10px] shrink-0 font-medium mt-0.5">[{log.timestamp}]</span>
                 <span className={`px-1 rounded text-[9px] font-bold uppercase border tracking-wide mt-0.5 shrink-0 ${systemTagClass}`}>{log.type}</span>
                 <span className={`shrink-0 font-bold ${tagColor}`}>[{log.service === 'Notification' ? 'notify' : log.service.toLowerCase()}]:</span>
@@ -97,9 +97,9 @@ export function TerminalConsole({ t, logs, onClearLogs, scrollRef }: TerminalCon
       <div className="bg-[#0e121e] border-t border-slate-800/80 px-4 py-2 flex items-center justify-between text-[10px] font-mono text-slate-500">
         <div className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>nest-cli daemon listening</span>
+          <span>{t.stdoutDaemonListening}</span>
         </div>
-        <span>UTF-8 stream on active container console</span>
+        <span>{t.stdoutUtfStream}</span>
       </div>
     </div>
   )
