@@ -3,6 +3,7 @@ import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import dotenv from 'dotenv';
 import fs from 'fs';
+import { GoogleGenAI } from '@google/genai';
 
 // Load environment configurations from .env or .env.example
 if (fs.existsSync('.env')) {
@@ -24,6 +25,7 @@ interface Subscriber {
   username?: string;
   lastSeen: string;
   lastTextSent?: string;
+  lastTextReceived?: string;
   registeredAt: string;
 }
 
@@ -47,7 +49,7 @@ function maskSecret(secret: string): string {
   return secret.substring(0, 4) + '...' + secret.substring(secret.length - 4);
 }
 
-// Background poll worker to listen for in-bound /start and print chat IDs
+// Background poll worker to listen for in-bound /start, text messages, and transcribing voice/audio clips
 async function pollTelegramUpdates() {
   const tokenToPoll = globalToken;
   if (!tokenToPoll) return;
@@ -71,7 +73,24 @@ async function pollTelegramUpdates() {
           const username = message.from?.username ? `@${message.from.username}` : undefined;
           const userText = message.text || '';
           
-          console.log(`[Telegram Bot Listener] Received message from Telegram: Chat ID: ${chatIdVal}, text: "${userText}"`);
+          let finalUserText = userText || '';
+          let isVoice = false;
+          let voiceFileId = '';
+          let voiceMimeType = '';
+
+          if (message.voice) {
+            isVoice = true;
+            voiceFileId = message.voice.file_id;
+            voiceMimeType = message.voice.mime_type || 'audio/ogg';
+            finalUserText = '[🎙️ Голосовое сообщение]';
+          } else if (message.audio) {
+            isVoice = true;
+            voiceFileId = message.audio.file_id;
+            voiceMimeType = message.audio.mime_type || 'audio/mpeg';
+            finalUserText = '[🎵 Аудиозапись]';
+          }
+
+          console.log(`[Telegram Bot Listener] Received message from Telegram: Chat ID: ${chatIdVal}, text: "${finalUserText}"`);
 
           // Register or update subscriber in list
           const existingIdx = subscribers.findIndex(s => s.id === chatIdVal);
@@ -80,7 +99,8 @@ async function pollTelegramUpdates() {
             name: full_name,
             username,
             lastSeen: new Date().toLocaleTimeString(),
-            lastTextSent: userText,
+            lastTextSent: finalUserText,
+            lastTextReceived: finalUserText,
             registeredAt: existingIdx >= 0 ? subscribers[existingIdx].registeredAt : new Date().toLocaleTimeString()
           };
 
@@ -95,22 +115,160 @@ async function pollTelegramUpdates() {
             globalChatId = chatIdVal;
           }
 
-          // Reply to the user in Telegram
           const replyUrl = `https://api.telegram.org/bot${tokenToPoll}/sendMessage`;
-          const textMsg = `👋 **Привет, ${first_name || 'друг'}!**\n\n` +
-                          `⚙️ Я успешно авторизовал твой **Chat ID**: \`${chatIdVal}\`\n\n` +
-                          `✅ Твое устройство привязано к Web-панели управления RabbitMQ!\n` +
-                          `📢 Теперь ты будешь получать мгновенные алерты обработки сообщений из нашего кластера NestJS. Попробуй нажать **Run Signal Simulation** на сайте!`;
 
-          await fetch(replyUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              chat_id: chatIdVal,
-              text: textMsg,
-              parse_mode: 'Markdown'
-            })
-          });
+          if (isVoice && voiceFileId) {
+            try {
+              // Send temporary "processing..." status
+              const tempStatusMsgRes = await fetch(replyUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  chat_id: chatIdVal,
+                  text: `🎙️ *[ИИ Дешифратор]*: Получил ваше аудиосообщение. Начинаю распознавание речи...`,
+                  parse_mode: 'Markdown'
+                })
+              });
+              let tempMsgId: number | undefined = undefined;
+              if (tempStatusMsgRes.ok) {
+                const tempMsgJson = await tempStatusMsgRes.json() as any;
+                if (tempMsgJson.ok && tempMsgJson.result && tempMsgJson.result.message_id) {
+                  tempMsgId = tempMsgJson.result.message_id;
+                }
+              }
+
+              // Get actual file details to download
+              const getFileUrl = `https://api.telegram.org/bot${tokenToPoll}/getFile?file_id=${voiceFileId}`;
+              const getFileRes = await fetch(getFileUrl);
+              const getFileJson = await getFileRes.json() as any;
+              
+              if (getFileJson.ok && getFileJson.result && getFileJson.result.file_path) {
+                const filePath = getFileJson.result.file_path;
+                const fileDownloadUrl = `https://api.telegram.org/file/bot${tokenToPoll}/${filePath}`;
+                
+                const fileContentRes = await fetch(fileDownloadUrl);
+                const arrayBuffer = await fileContentRes.arrayBuffer();
+                const base64Data = Buffer.from(arrayBuffer).toString('base64');
+                
+                const geminiApiKey = process.env.GEMINI_API_KEY;
+                if (!geminiApiKey) {
+                  throw new Error('Ключ API Gemini не настроен во вкладке Settings > Secrets.');
+                }
+                
+                const ai = new GoogleGenAI({
+                  apiKey: geminiApiKey,
+                  httpOptions: {
+                    headers: {
+                      'User-Agent': 'aistudio-build'
+                    }
+                  }
+                });
+                
+                const geminiRes = await ai.models.generateContent({
+                  model: 'gemini-3.5-flash',
+                  contents: [
+                    {
+                      inlineData: {
+                        mimeType: voiceMimeType,
+                        data: base64Data
+                      }
+                    },
+                    {
+                      text: "Ты профессиональный транскрибатор. Пожалуйста, со всеми деталями, знаками препинания и дословно переведи это аудиосообщение в текст на русском языке. Верни ТОЛЬКО голый текст расшифровки без каких-либо вводных слов, пояснений, комментариев или кавычек."
+                    }
+                  ]
+                });
+                
+                const resultText = geminiRes.text?.trim() || '⚠️ Речь не распознана или аудио слишком тихое.';
+                const resolvedTextRepresentation = `[🎙️ Голосовое]: ${resultText}`;
+
+                // Update subscriber state with the real-time transcription
+                const updatedIdx = subscribers.findIndex(s => s.id === chatIdVal);
+                if (updatedIdx >= 0) {
+                  subscribers[updatedIdx].lastTextSent = resolvedTextRepresentation;
+                  subscribers[updatedIdx].lastTextReceived = resolvedTextRepresentation;
+                }
+
+                // Delete the temporary status message to clear stream
+                if (tempMsgId) {
+                  const deleteUrl = `https://api.telegram.org/bot${tokenToPoll}/deleteMessage`;
+                  await fetch(deleteUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      chat_id: chatIdVal,
+                      message_id: tempMsgId
+                    })
+                  }).catch(() => {});
+                }
+
+                // Send the beautifully formatted final transcript reply
+                await fetch(replyUrl, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    chat_id: chatIdVal,
+                    text: `📝 **Результат расшифровки голосового сообщения:**\n\n« _${resultText}_ »\n\n⚡ _Транскрибация выполнена через ИИ модель Gemini 3.5-flash!_`,
+                    parse_mode: 'Markdown'
+                  })
+                });
+
+              } else {
+                throw new Error('Не удалось получить структуру файла от Telegram API.');
+              }
+            } catch (err: any) {
+              console.error('[Telegram Audio Recognition Log Exception]', err);
+              const errorMsg = err.message || String(err);
+              const resolvedTextRepresentation = `[🎙️ Голосовое]: Ошибка (${errorMsg})`;
+              const updatedIdx = subscribers.findIndex(s => s.id === chatIdVal);
+              if (updatedIdx >= 0) {
+                subscribers[updatedIdx].lastTextSent = resolvedTextRepresentation;
+                subscribers[updatedIdx].lastTextReceived = resolvedTextRepresentation;
+              }
+
+              // Send helper fallback formatting
+              await fetch(replyUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  chat_id: chatIdVal,
+                  text: `⚠️ *Ошибка транскрибации:* ${errorMsg}\n\n_Пожалуйста, убедитесь, что API ключ Gemini настроен в настройках приложения (Secrets)._`,
+                  parse_mode: 'Markdown'
+                })
+              });
+            }
+          } else if (userText.trim().toLowerCase() === '/start') {
+            const textMsg = `👋 **Привет, ${first_name || 'друг'}!**\n\n` +
+                            `⚙️ Я успешно авторизовал твой **Chat ID**: \`${chatIdVal}\`\n\n` +
+                            `✅ Устройство сопряжено с Web-панелью системы!\n` +
+                            `🎙️ **ИИ Расшифровщик готов!** Ты можешь записывать и отправлять мне обычные голосовые/аудио сообщения, а я буду мгновенно переводить их в печатный текст через нейросеть Gemini!`;
+
+            await fetch(replyUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                chat_id: chatIdVal,
+                text: textMsg,
+                parse_mode: 'Markdown'
+              })
+            });
+          } else {
+            // Reply acknowledging their normal text message
+            const textMsg = `🤖 **Я услышал твой текстовый сигнал!**\n\n` +
+                            `Текст: \`${userText}\`\n` +
+                            `Сопряженный Chat ID: \`${chatIdVal}\`\n\n` +
+                            `💡 Напомню, что ты в любой момент можешь отправить мне **голосовое или аудио-сообщение**, и я переведу его в готовый текст! Попробуй записать голос!`;
+
+            await fetch(replyUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                chat_id: chatIdVal,
+                text: textMsg,
+                parse_mode: 'Markdown'
+              })
+            });
+          }
         }
       }
     }
