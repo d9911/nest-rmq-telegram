@@ -17,6 +17,7 @@ coverage/
 */dist/**
 */.env
 */yarn.lock
+yarn.lock
 .claude/**
 */package-lock.json
 package-lock.json
