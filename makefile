@@ -31,3 +31,33 @@ test:
 # Full purge of containers, networks, and RabbitMQ persistent volumes
 clean:
 	docker-compose down -v
+
+
+#=============================local =============================
+BACKEND_PORT=8001
+FRONTEND_PORT=3000
+
+clean-ports:
+	@echo "Очищаем порты $(BACKEND_PORT) (Backend) и $(FRONTEND_PORT) (Frontend)..."
+	-npx --yes kill-port $(BACKEND_PORT) $(FRONTEND_PORT) 5173 8000 5175
+
+	# Цветное оформление
+COLOR_RESET   := \033[0m
+COLOR_BOLD    := \033[1m
+COLOR_RED     := \033[31m
+COLOR_GREEN   := \033[32m
+COLOR_YELLOW  := \033[33m
+COLOR_BLUE    := \033[34m
+COLOR_MAGENTA := \033[35m
+COLOR_CYAN    := \033[36m
+
+
+install:
+	@echo "Устанавливаем зависимости фронт..."
+	yarn install
+	@echo "Устанавливаем зависимости consumer..."
+	cd services/consumer && yarn install
+	@echo "Устанавливаем зависимости notification..."
+	cd services/notification && yarn install
+	@echo "Устанавливаем зависимости producer..."
+	cd services/producer && yarn install
