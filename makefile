@@ -94,6 +94,8 @@ build-services:
 	cd services/notification && yarn run build
 	@echo "Building producer..."
 	cd services/producer && yarn run build
+	@echo "Building ui..."
+	yarn build
 
 # Re-initialize NestJS CLI and configurations for all services if needed
 init-nest:

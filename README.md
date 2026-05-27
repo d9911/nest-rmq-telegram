@@ -3,6 +3,7 @@
 This repository houses a highly scalable, SOLID-compliant microservices ecosystem built on NestJS (with Fastify) with RabbitMQ message queuing and the Telegram Bot API.
 
 ## Architecture Highlights
+
 1. **Separation of Concerns (SOLID)**: Each microservice represents a single domain:
    - **Producer**: Handles HTTP ingestion with Swagger OpenAPI specs, validates inputs, attaches UUID-based idempotency tokens, and pushes raw tasks definition.
    - **Consumer**: Receives tasks, applies business logic, handles failures with retries, and publishes resolved notification commands.
@@ -10,13 +11,21 @@ This repository houses a highly scalable, SOLID-compliant microservices ecosyste
 2. **Idempotency**: Message IDs are tracked using UUID v4.
 3. **Resilience**: RabbitMQ channels utilize manual acknowledgements (`noAck: false`), recovering with requeueing/retry structures on error.
 
+<div align="center">
+  <img src="./telegram.jpg" alt="Telegram" width="50%" />
+  <br/><br/>
+  <img src="./1600.jpg" alt="Desktop UI" width="50%" />
+</div>
+
 ## Running the Ecosystem
 
 ### Prerequisites
+
 - Docker & Docker Compose
 - Node.js >= 20.0.0 (for local development)
 
 ### Quick Start
+
 1. Edit your environment variables in `.env`:
    ```env
    TELEGRAM_BOT_TOKEN="your-bot-token-here"

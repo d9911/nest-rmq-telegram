@@ -1,9 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 }
 
 /* Custom dashed line animation helper */
@@ -19,6 +19,7 @@
     opacity: 0;
     transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -29,38 +30,50 @@
   animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Custom Beautiful Scrollbars (Global & Utility Class) */
+/* Custom Beautiful Scrollbars (Global & Utility Class) - Engineered for Safari & Chrome dark compliance */
 
-/* Global HTML & Body Scrollbars */
-html, body {
+/* Global HTML & Body Scrollbars for Firefox */
+html,
+body {
   scrollbar-width: thin;
-  scrollbar-color: #1e293b #07090e;
+  scrollbar-color: #4f46e5 #07090e;
 }
 
-/* Chrome, Safari, Edge scrollbar styles for full page */
+
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #07090e;
+  background: #07090e !important;
+
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #1e293b;
+  background: linear-gradient(180deg, #1e1b4b 0%, #311043 50%, #4c1d95 100%) !important;
+
   border-radius: 5px;
-  border: 2.5px solid #07090e;
+  border: 2px solid #07090e;
+
+  box-shadow: inset 0 0 3px rgba(139, 92, 246, 0.2);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: #aa2d00;
+  background: linear-gradient(180deg, #312e81 0%, #4c1d95 50%, #6d28d9 100%) !important;
+  /* Vibrant purple-violet glow on hover */
+  border-radius: 5px;
+  border: 2px solid #07090e;
+  box-shadow: inset 0 0 6px rgba(167, 139, 250, 0.45);
 }
 
-/* Custom Scrollbar Class for internal panels/containers */
+/* Custom Scrollbar Class for internal panels/containers (Terminal, Queue monitors) */
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: rgba(251, 146, 60, 0.25) rgba(15, 23, 42, 0.4);
+  scrollbar-color: #4f46e5 #05070c;
+  /* High contrast fallback for Firefox */
+  -webkit-overflow-scrolling: touch;
+  /* Smooth kinetic navigation on iOS/macOS Safari */
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -68,17 +81,28 @@ html, body {
   height: 6px;
 }
 
+/* Force solid sleek dark-blue background on tracks to block Safari's white fallback */
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.3);
+  background: #060913 !important;
+  /* Solid elegant cosmic black-indigo */
   border-radius: 3px;
+  box-shadow: inset 0 0 1px rgba(0, 0, 0, 0.5);
 }
 
+/* Beautiful shimmering linear gradient thumb styling for high-quality visual rhythm */
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: rgba(251, 146, 60, 0.25);
+  background: linear-gradient(180deg, #1d4ed8 0%, #5b21b6 50%, #701a75 100%) !important;
+  /* Shimmering deep ocean blue, rich violet & deep grape purple */
   border-radius: 3px;
+  border: 1px solid #060913;
+  /* Elegant gap separator */
+  box-shadow: inset 0 0 4px rgba(124, 58, 237, 0.3);
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(251, 146, 60, 0.55);
+  background: linear-gradient(180deg, #3b82f6 0%, #8b5cf6 50%, #d946ef 100%) !important;
+  /* Brilliant cybernetic cyan-purple-magenta shift */
+  border-radius: 3px;
+  border: 1px solid #060913;
+  box-shadow: inset 0 0 6px rgba(167, 139, 250, 0.6);
 }
-
