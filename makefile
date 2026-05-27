@@ -107,3 +107,79 @@ init-nest:
 		cd services/$$service && yarn add -D @nestjs/cli && cd ../.. ; \
 	done
 	@echo "NestJS services successfully initialized!"
+
+#============================= WSL 2 в Windows =============================
+wsl:
+	wsl -d Ubuntu
+	@echo "В WSL узнайте свой IP"
+	ip addr show eth0 | grep "inet " | awk '{print $2}' | cut -d/ -f1
+
+docker-win:
+	@echo "Обновление пакетов"
+	sudo apt update && sudo apt upgrade -y
+	@echo "Установка Node.js 20.x и yarn"
+	curl -fsSL https://deb.nodesource.com/setup_20.x | sudo bash -
+	sudo apt install -y nodejs
+	npm install --global yarn
+	@echo "Установка RabbitMQ (локально в WSL)"
+	sudo apt install -y rabbitmq-server
+	sudo systemctl enable rabbitmq-server
+	sudo systemctl start rabbitmq-server
+
+docker-win:
+	@echo "=== Установка Docker для Windows + WSL ==="
+	@echo "1. Удалите испорченный файл (если есть):"
+	@echo "   sudo rm -f /etc/apt/sources.list.d/docker.list"
+	@echo "   sudo apt update"
+	@echo ""
+	@echo "2. Скачайте Docker Desktop: https://www.docker.com/products/docker-desktop/"
+	@echo ""
+	@echo "3. В настройках Docker Desktop включите:"
+	@echo "   Settings → Resources → WSL Integration → включите Ubuntu"
+	@echo ""
+	@echo "4. Перезапустите WSL: wsl --shutdown"
+	@echo ""
+	@echo "5. Проверьте: docker --version"
+	docker --version
+	docker ps
+
+
+docker-win-simple:
+	curl -fsSL https://get.docker.com -o get-docker.sh
+	sudo sh get-docker.sh
+	sudo usermod -aG docker $$USER
+	sudo service docker start
+	@echo "Docker установлен!"
+
+dk-clear:
+	sudo rm /etc/apt/sources.list.d/docker.list
+	sudo apt update
+
+user:
+	sudo usermod -aG docker $USER
+	newgrp docker
+
+port-windows:
+	@echo "Разрешаем входящие соединения на порты 3000 (UI), 8001 (API), 15672 (RabbitMQ Management)"
+	New-NetFirewallRule -DisplayName "NestJS-UI" -Direction Inbound -Protocol TCP -LocalPort 3000 -Action Allow
+	New-NetFirewallRule -DisplayName "NestJS-API" -Direction Inbound -Protocol TCP -LocalPort 8001 -Action Allow
+	New-NetFirewallRule -DisplayName "RabbitMQ-Mgmt" -Direction Inbound -Protocol TCP -LocalPort 15672 -Action Allow
+
+port-wsl:
+	netsh interface portproxy delete v4tov4 listenport=3000 listenaddress=192.168.1.249
+	netsh interface portproxy delete v4tov4 listenport=8001 listenaddress=192.168.1.249
+	netsh interface portproxy delete v4tov4 listenport=15672 listenaddress=192.168.1.249
+	netsh interface portproxy add v4tov4 listenport=3000 listenaddress=192.168.1.249 connectport=3000 connectaddress=172.25.225.109
+	netsh interface portproxy add v4tov4 listenport=8001 listenaddress=192.168.1.249 connectport=8001 connectaddress=172.25.225.109
+	netsh interface portproxy add v4tov4 listenport=15672 listenaddress=192.168.1.249 connectport=15672 connectaddress=172.25.225.109
+	netsh advfirewall firewall add rule name="WSL NestJS UI 3000" dir=in action=allow protocol=TCP localport=3000
+	netsh advfirewall firewall add rule name="WSL NestJS API 8001" dir=in action=allow protocol=TCP localport=8001
+	netsh advfirewall firewall add rule name="WSL RabbitMQ Mgmt 15672" dir=in action=allow protocol=TCP localport=15672
+
+forwarding-wsl-5177:
+	netsh interface portproxy add v4tov4 listenport=5177 listenaddress=0.0.0.0 connectport=3000 connectaddress=172.25.225.109
+	netsh advfirewall firewall add rule name="NestJS on 5177" dir=in action=allow protocol=TCP localport=5177
+	@echo "Посмотреть все пробросы"
+	netsh interface portproxy show all
+s-win:
+	@echo "start"
