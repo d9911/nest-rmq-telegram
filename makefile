@@ -183,3 +183,10 @@ forwarding-wsl-5177:
 	netsh interface portproxy show all
 s-win:
 	@echo "start"
+
+
+
+windows-config:
+	@echo "Создание .wslconfig для ограничения памяти WSL..."
+	powershell -Command "$$userProfile = $$env:USERPROFILE; $$configPath = Join-Path $$userProfile '.wslconfig'; $$content = '[wsl2]`nmemory=4GB`nprocessors=2`nswap=2GB'; Set-Content -Path $$configPath -Value $$content -Force; Write-Host 'Файл создан:' $$configPath"
+	@echo "Перезапустите WSL командой: wsl --shutdown"
