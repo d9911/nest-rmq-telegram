@@ -487,12 +487,30 @@ export default function App() {
     <div className="min-h-screen bg-[#07090E] text-slate-100 font-sans antialiased selection:bg-[#fb923c] selection:text-white pb-16">
       {/* 1. TOP NAV - Airtable Unified Space Dark Styling */}
       <nav id="top-nav" className="sticky top-0 z-50 h-16 bg-[#07090E]/95 border-b border-slate-800 shadow-xl backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
-          <div className="flex items-center space-x-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-full flex items-center justify-between">
+          <div className="flex items-center space-x-3 sm:space-x-8 min-w-0">
             {/* Airtable Signature Visual Grid Icon & Title */}
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-lg bg-[#aa2d00] flex items-center justify-center text-white font-bold text-lg shadow-md">N</div>
-              <span className="font-semibold text-lg tracking-tight text-white">{t.workspaceTitle}</span>
+            <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+              <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600/20 border border-indigo-500/30 text-indigo-400">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="lucide lucide-layers h-5 w-5"
+                  aria-hidden="true"
+                >
+                  <path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83z"></path>
+                  <path d="M2 12a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 12"></path>
+                  <path d="M2 17a1 1 0 0 0 .58.91l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9A1 1 0 0 0 22 17"></path>
+                </svg>
+              </div>
+              <span className="font-semibold text-sm sm:text-base md:text-lg tracking-tight text-white truncate max-w-[110px] xs:max-w-[180px] sm:max-w-none">{t.workspaceTitle}</span>
             </div>
 
             {/* Nav links */}
@@ -524,15 +542,15 @@ export default function App() {
             </div>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4 shrink-0">
             {/* Language Toggle Selector */}
-            <div className="flex bg-slate-900 p-1 rounded-lg border border-slate-800 items-center text-[11px]">
+            <div className="flex bg-slate-900 p-0.5 sm:p-1 rounded-lg border border-slate-800 items-center text-[10px] sm:text-[11px] shrink-0">
               <button
                 onClick={() => {
                   setLang('ru')
                   localStorage.setItem('APP_LANGUAGE', 'ru')
                 }}
-                className={`px-2.5 py-1 rounded font-bold transition-all ${lang === 'ru' ? 'bg-[#aa2d00] text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}
+                className={`px-2 sm:px-2.5 py-0.5 sm:py-1 rounded font-bold transition-all ${lang === 'ru' ? 'bg-[#aa2d00] text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}
               >
                 RU
               </button>
@@ -541,7 +559,7 @@ export default function App() {
                   setLang('en')
                   localStorage.setItem('APP_LANGUAGE', 'en')
                 }}
-                className={`px-2.5 py-1 rounded font-bold transition-all ${lang === 'en' ? 'bg-[#aa2d00] text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}
+                className={`px-2 sm:px-2.5 py-0.5 sm:py-1 rounded font-bold transition-all ${lang === 'en' ? 'bg-[#aa2d00] text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}
               >
                 EN
               </button>
@@ -550,12 +568,12 @@ export default function App() {
             {/* Telegram config indicator */}
             <button
               onClick={() => setShowConfig(!showConfig)}
-              className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg border text-xs font-semibold tracking-wide transition-colors ${
+              className={`flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 py-1.5 rounded-lg border text-xs font-semibold tracking-wide transition-colors shrink-0 ${
                 tgConfig.token ? 'border-emerald-500/40 text-emerald-400 bg-emerald-950/40' : 'border-slate-800 text-slate-350 bg-slate-900 hover:bg-slate-800/80'
               }`}
             >
               <Settings className="w-3.5 h-3.5" />
-              <span>{tgConfig.token ? t.liveBotConfigured : t.configureLiveBot}</span>
+              <span className="hidden sm:inline">{tgConfig.token ? t.liveBotConfigured : t.configureLiveBot}</span>
             </button>
 
             <a
@@ -564,7 +582,7 @@ export default function App() {
                 e.preventDefault()
                 setActiveTab('code')
               }}
-              className="px-4 py-1.5 rounded-lg bg-slate-800 text-slate-200 text-xs font-semibold tracking-wide hover:bg-slate-700 hover:text-white transition-colors"
+              className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200 text-xs font-semibold tracking-wide hover:bg-slate-700 hover:text-white transition-colors shrink-0 hidden md:inline-block"
             >
               {t.copySourceCodeBtn}
             </a>
@@ -573,30 +591,30 @@ export default function App() {
       </nav>
 
       {/* 2. HERO BAND - Unified dark workspace theme */}
-      <header className="py-12 bg-slate-900/10 border-b border-slate-800/80">
-        <div className="max-w-7xl mx-auto px-6">
+      <header className="py-8 sm:py-12 bg-slate-900/10 border-b border-slate-800/80">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="max-w-3xl">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#aa2d00]/10 border border-[#aa2d00]/30 text-[#fcab79] text-xs font-semibold mb-4">
               <Cpu className="w-3.5 h-3.5 animate-pulse" />
               <span>{t.heroTechBadge}</span>
             </div>
 
-            <h1 className="text-4xl md:text-5xl font-normal tracking-tight text-white leading-tight mb-4">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-normal tracking-tight text-white leading-tight mb-4 break-words">
               {t.heroHeaderFirst} <span className="font-semibold text-[#fcab79]">{t.heroHeaderAccent}</span>
             </h1>
-            <p className="text-base text-slate-300 leading-relaxed mb-6">{t.heroDesc}</p>
+            <p className="text-sm sm:text-base text-slate-300 leading-relaxed mb-6">{t.heroDesc}</p>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2.5 sm:gap-3">
               <button
                 onClick={() => setActiveTab('playground')}
-                className="px-6 py-3 bg-white hover:bg-slate-100 text-[#07090E] font-semibold rounded-lg text-sm transition-all inline-flex items-center space-x-2 shadow-md"
+                className="px-4 sm:px-6 py-2.5 sm:py-3 bg-white hover:bg-slate-100 text-[#07090E] font-semibold rounded-lg text-sm transition-all inline-flex items-center space-x-2 shadow-md w-full sm:w-auto justify-center"
               >
                 <Play className="w-4 h-4 fill-current text-slate-950" />
                 <span>{t.runSignalBtn}</span>
               </button>
               <button
                 onClick={() => setActiveTab('code')}
-                className="px-6 py-3 bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 font-medium rounded-lg text-sm transition-all inline-flex items-center space-x-2"
+                className="px-4 sm:px-6 py-2.5 sm:py-3 bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-800 font-medium rounded-lg text-sm transition-all inline-flex items-center space-x-2 w-full sm:w-auto justify-center"
               >
                 <Code className="w-4 h-4" />
                 <span>{t.browseCodeBtn}</span>
@@ -882,7 +900,7 @@ export default function App() {
                     <span className="text-[10.5px] text-slate-400 font-mono tracking-wider">{t.brokerMonitorSubtitle}</span>
                   </div>
 
-                  <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+                  <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
                     {messages.length === 0 ? (
                       <div className="text-center py-12 border border-dashed border-slate-800 rounded-lg">
                         <p className="text-xs text-slate-500 italic">{t.brokerMonitorEmpty}</p>
@@ -969,7 +987,7 @@ export default function App() {
                     </button>
                   </div>
 
-                  <div ref={scrollRef} className="p-4 font-mono text-[11px] leading-relaxed h-[240px] overflow-y-auto space-y-2 text-slate-300">
+                  <div ref={scrollRef} className="p-4 font-mono text-[11px] leading-relaxed h-[240px] overflow-y-auto space-y-2 text-slate-300 custom-scrollbar">
                     {logs.length === 0 ? (
                       <p className="text-slate-500 italic text-center py-10">{t.stdoutNoStreams}</p>
                     ) : (
@@ -1089,7 +1107,7 @@ export default function App() {
 
                   <p className="text-xs text-slate-400 leading-relaxed">{t.subscribersSubtitle}</p>
 
-                  <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                  <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1 custom-scrollbar">
                     {subscribers.length === 0 ? (
                       <div className="p-5 border border-dashed border-slate-800 rounded-lg bg-[#05060A]/60 text-center space-y-1.5">
                         <p className="text-xs font-semibold text-slate-500">{t.subscribersEmpty}</p>
@@ -1291,7 +1309,7 @@ export default function App() {
                     </div>
 
                     {/* Messages Panel */}
-                    <div className="relative z-10 flex-1 overflow-y-auto space-y-2 pr-1 pt-1 flex flex-col justify-end w-full">
+                    <div className="relative z-10 flex-1 overflow-y-auto space-y-2 pr-1 pt-1 flex flex-col justify-end w-full custom-scrollbar">
                       {messages.filter((m) => m.status === 'acked' || m.status === 'processing').length === 0 ? (
                         <p className="text-slate-500 italic text-center py-10 text-[11px]">{t.phoneBotAwaiting}</p>
                       ) : (
@@ -1436,7 +1454,7 @@ export default function App() {
                   <span className="text-[10px] text-slate-500 uppercase font-mono tracking-wider font-semibold">{selectedFile.language}</span>
                 </div>
 
-                <div className="p-5 font-mono text-xs leading-relaxed overflow-x-auto text-slate-300 max-h-[580px]">
+                <div className="p-5 font-mono text-xs leading-relaxed overflow-auto text-slate-300 max-h-[580px] custom-scrollbar">
                   <pre className="select-all">
                     {selectedFile.content.split('\n').map((line, idx) => (
                       <div key={idx} className="flex">
@@ -1559,7 +1577,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-6 py-12 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center space-x-2">
             <div className="w-6 h-6 rounded-md bg-[#aa2d00] flex items-center justify-center text-white font-bold text-xs shadow-sm">N</div>
-            <span className="font-semibold text-xs tracking-wide text-slate-405 text-slate-400">NestJS Microservices Workspace • Crafted in AI Studio Build</span>
+            <span className="font-semibold text-xs tracking-wide text-slate-405 text-slate-400">NestJS Microservices Workspace • denGu</span>
           </div>
           <p className="text-xs text-slate-505 text-slate-500 font-medium">Project License: GPL-3.0-or-later • Solid clean code blocks pre-compiled</p>
         </div>
