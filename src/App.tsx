@@ -27,6 +27,7 @@ import {
   Plus
 } from 'lucide-react'
 import { CODE_FILES, CodeFile } from './codefiles'
+import { translations, Language } from './translations'
 
 // Interfaces for our live RabbitMQ simulation
 export interface SimulatedMessage {
@@ -48,6 +49,10 @@ export interface SimulationLog {
 }
 
 export default function App() {
+  // Multilingual Language state (English / Russian)
+  const [lang, setLang] = useState<Language>((localStorage.getItem('APP_LANGUAGE') as Language) || 'ru')
+  const t = translations[lang]
+
   // Navigation: 'playground' | 'code' | 'docs'
   const [activeTab, setActiveTab] = useState<'playground' | 'code' | 'docs'>('playground')
 
@@ -485,7 +490,7 @@ export default function App() {
                 N
               </div>
               <span className="font-semibold text-lg tracking-tight text-[#181d26]">
-                NestJS Microservices Workspace
+                {t.workspaceTitle}
               </span>
             </div>
             
@@ -499,7 +504,7 @@ export default function App() {
                     : 'text-[#333840] hover:text-[#181d26]'
                 }`}
               >
-                Interactive Playground
+                {t.interactivePlayground}
               </button>
               <button
                 onClick={() => setActiveTab('code')}
@@ -509,7 +514,7 @@ export default function App() {
                     : 'text-[#333840] hover:text-[#181d26]'
                 }`}
               >
-                Source Code IDE
+                {t.sourceCodeIde}
               </button>
               <button
                 onClick={() => setActiveTab('docs')}
@@ -519,12 +524,38 @@ export default function App() {
                     : 'text-[#333840] hover:text-[#181d26]'
                 }`}
               >
-                Documentation
+                {t.documentation}
               </button>
             </div>
           </div>
 
           <div className="flex items-center space-x-4">
+            {/* Language Toggle Selector */}
+            <div className="flex bg-gray-100 p-1 rounded-lg border border-[#dddddd] items-center text-[11px]">
+              <button
+                onClick={() => {
+                  setLang('ru');
+                  localStorage.setItem('APP_LANGUAGE', 'ru');
+                }}
+                className={`px-2.5 py-1 rounded font-bold transition-all ${
+                  lang === 'ru' ? 'bg-[#aa2d00] text-white shadow-sm' : 'text-gray-600 hover:text-black'
+                }`}
+              >
+                RU
+              </button>
+              <button
+                onClick={() => {
+                  setLang('en');
+                  localStorage.setItem('APP_LANGUAGE', 'en');
+                }}
+                className={`px-2.5 py-1 rounded font-bold transition-all ${
+                  lang === 'en' ? 'bg-[#aa2d00] text-white shadow-sm' : 'text-gray-600 hover:text-black'
+                }`}
+              >
+                EN
+              </button>
+            </div>
+
             {/* Telegram config indicator */}
             <button
               onClick={() => setShowConfig(!showConfig)}
@@ -535,7 +566,7 @@ export default function App() {
               }`}
             >
               <Settings className="w-3.5 h-3.5" />
-              <span>{tgConfig.token ? 'Live Bot Configured' : 'Configure Live Bot'}</span>
+              <span>{tgConfig.token ? t.liveBotConfigured : t.configureLiveBot}</span>
             </button>
 
             <a
@@ -546,7 +577,7 @@ export default function App() {
               }}
               className="px-4 py-1.5 rounded-lg bg-[#181d26] text-white text-xs font-semibold tracking-wide hover:bg-[#0d1218] transition-colors"
             >
-              Copy Source Code
+              {t.copySourceCodeBtn}
             </a>
           </div>
         </div>
@@ -558,15 +589,14 @@ export default function App() {
           <div className="max-w-3xl">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#f5e9d4] border border-[#d9a441] text-[#aa2d00] text-xs font-semibold mb-4">
               <Cpu className="w-3.5 h-3.5" />
-              <span>NestJS • RabbitMQ • Telegram Bot API • Fastify</span>
+              <span>{t.heroTechBadge}</span>
             </div>
             
             <h1 className="text-4xl md:text-5xl font-normal tracking-tight text-[#181d26] leading-tight mb-4">
-              Enterprise Microservice <span className="font-semibold text-[#aa2d00]">Ecosystem</span>
+              {t.heroHeaderFirst} <span className="font-semibold text-[#aa2d00]">{t.heroHeaderAccent}</span>
             </h1>
             <p className="text-base text-[#333840] leading-relaxed mb-6">
-              A professionally architected, SOLID-compliant backend using NestJS, decoupled via RabbitMQ direct queue brokers, and delivering telemetry streams to the Telegram API. 
-              Configure, run, and step-debug the entire pipeline inside this interactive panel.
+              {t.heroDesc}
             </p>
 
             <div className="flex flex-wrap gap-3">
@@ -575,14 +605,14 @@ export default function App() {
                 className="px-6 py-3 bg-[#181d26] hover:bg-[#0d1218] text-white font-medium rounded-lg text-sm transition-all inline-flex items-center space-x-2"
               >
                 <Play className="w-4 h-4 fill-current" />
-                <span>Run Signal Simulation</span>
+                <span>{t.runSignalBtn}</span>
               </button>
               <button
                 onClick={() => setActiveTab('code')}
                 className="px-6 py-3 bg-white border border-[#dddddd] text-[#181d26] hover:bg-gray-50 font-medium rounded-lg text-sm transition-all inline-flex items-center space-x-2"
               >
                 <Code className="w-4 h-4" />
-                <span>Browse Code Workspace</span>
+                <span>{t.browseCodeBtn}</span>
               </button>
             </div>
           </div>
@@ -596,7 +626,7 @@ export default function App() {
             <div className="px-6 py-4 border-b border-[#dddddd] bg-gray-50 flex justify-between items-center">
               <div className="flex items-center space-x-2">
                 <Bot className="w-5 h-5 text-[#aa2d00]" />
-                <span className="font-semibold text-base">Telegram API Real Dispatcher</span>
+                <span className="font-semibold text-base">{t.botDialogTitle}</span>
               </div>
               <button 
                 onClick={() => setShowConfig(false)}
@@ -608,16 +638,16 @@ export default function App() {
             
             <form onSubmit={saveTelegramConfig} className="p-6 space-y-4">
               <div className="p-3 bg-[#f5e9d4] text-[#aa2d00] rounded-lg border border-[#e0cbaf] text-xs leading-relaxed">
-                <strong>🔒 Secure Storage:</strong> Your Bot API Token is stored strictly local in your web browser (localStorage). It is never sent to any external server except directly to the official <code>api.telegram.org</code> webhook!
+                <strong>{t.botSecureLabel}</strong>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-[#181d26] uppercase tracking-wider mb-1">
-                  Telegram Bot Token
+                  {t.botTokenLabel}
                 </label>
                 <input
                   type="password"
-                  placeholder="e.g. 123456789:ABCDefGhIJKlmNoPQRsTUVwX..."
+                  placeholder={t.botTokenPlaceholder}
                   id="bot-token-input"
                   value={tgConfig.token}
                   onChange={(e) => setTgConfig({ ...tgConfig, token: e.target.value })}
@@ -627,18 +657,18 @@ export default function App() {
 
               <div>
                 <label className="block text-xs font-semibold text-[#181d26] uppercase tracking-wider mb-1">
-                  Target Chat ID / Chat user ID
+                  {t.botChatIdLabel}
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. -10012345678 or 987654321"
+                  placeholder={t.botChatIdPlaceholder}
                   id="chat-id-input"
                   value={tgConfig.chatId}
                   onChange={(e) => setTgConfig({ ...tgConfig, chatId: e.target.value })}
                   className="w-full text-sm rounded-lg border border-[#dddddd] px-3 py-2.5 bg-white text-[#181d26] focus:outline-none focus:border-[#aa2d00]"
                 />
                 <span className="text-[11px] text-[#717680] mt-1 block">
-                  You can get your Chat ID by messaging the bot <code>@userinfobot</code> in Telegram.
+                  {t.botChatIdDesc}
                 </span>
               </div>
 
@@ -648,14 +678,14 @@ export default function App() {
                   disabled={isSavingConfig}
                   className="flex-1 bg-[#aa2d00] hover:bg-[#802200] disabled:opacity-50 text-white py-2 px-4 rounded-lg font-medium text-xs tracking-wider transition-colors"
                 >
-                  {isSavingConfig ? 'Saving...' : 'Save Configuration'}
+                  {isSavingConfig ? t.botSavingBtn : t.botSaveBtn}
                 </button>
                 <button
                   type="button"
                   onClick={clearTelegramConfig}
                   className="bg-gray-100 hover:bg-gray-200 text-[#333840] py-2 px-3 rounded-lg font-medium text-xs transition-colors"
                 >
-                  Clear Keys
+                  {t.botClearBtn}
                 </button>
               </div>
             </form>
@@ -671,11 +701,11 @@ export default function App() {
             <section className="bg-white border border-[#dddddd] rounded-xl overflow-hidden shadow-sm">
               <div className="px-6 py-4 border-b border-[#dddddd] bg-gray-50 flex justify-between items-center">
                 <span className="font-semibold text-sm tracking-wide text-[#333840]">
-                  Live Microservices Architecture Data Flow
+                  {t.architectureTitle}
                 </span>
                 <span className="flex items-center space-x-1.5 text-xs text-[#0d9488]">
                   <span className="w-2 h-2 rounded-full bg-[#0d9488] animate-ping" />
-                  <span className="font-semibold">Broker Network Online</span>
+                  <span className="font-semibold">{t.brokerNetworkOnline}</span>
                 </span>
               </div>
 
@@ -688,20 +718,20 @@ export default function App() {
                 {/* Node 1: Producer API */}
                 <div className="border border-[#dddddd] rounded-xl p-5 bg-[#fafafa] flex flex-col justify-between space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold tracking-wider text-[#717680] uppercase">1. Producer REST Service</span>
+                    <span className="text-xs font-bold tracking-wider text-[#717680] uppercase">{t.producerNodeTitle}</span>
                     <span className="px-2 py-0.5 bg-[#e0f2fe] text-[#0369a1] text-[10px] font-bold rounded">Fastify API</span>
                   </div>
                   <div>
                     <h3 className="font-semibold text-base mb-1">nest-producer</h3>
                     <p className="text-xs text-[#717680]">
-                      Ingests payload, wraps with idempotent UUIDv4, serializes data, publishes to:
+                      {t.producerNodeDesc}
                     </p>
                     <div className="mt-2 text-xs font-mono bg-white p-1.5 rounded border border-[#dddddd]">
-                      exchange: amq.direct
+                      {t.producerExchangeLabel}
                     </div>
                   </div>
                   <div className="pt-2 border-t border-[#dddddd] flex items-center justify-between text-xs">
-                    <span className="text-[#717680]">Total Dispatched</span>
+                    <span className="text-[#717680]">{t.producerTotalDispatched}</span>
                     <span className="font-mono font-bold">{sentCount}</span>
                   </div>
                 </div>
@@ -709,7 +739,7 @@ export default function App() {
                 {/* Node 2: Message queue RabbitMQ */}
                 <div className="ring-2 ring-[#aa2d00] ring-offset-2 rounded-xl p-5 bg-[#fcab79]/5 flex flex-col justify-between space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold tracking-wider text-[#aa2d00] uppercase">2. RabbitMQ Broker</span>
+                    <span className="text-xs font-bold tracking-wider text-[#aa2d00] uppercase">{t.brokerNodeTitle}</span>
                     <span className="px-2 py-0.5 bg-[#ffedd5] text-[#aa2d00] text-[10px] font-bold rounded">AMQP 3.13</span>
                   </div>
                   <div>
@@ -718,25 +748,25 @@ export default function App() {
                       <span>Message Broker</span>
                     </h3>
                     <p className="text-xs text-[#717680]">
-                      Saves task envelopes in durable queues. Acknowledges transmission.
+                      {t.brokerNodeDesc}
                     </p>
                     <div className="mt-2 space-y-1">
                       <div className="flex justify-between text-[11px] font-mono bg-white p-1 rounded border border-[#dddddd]">
-                        <span className="text-[#333840]">tasks_queue:</span>
+                        <span className="text-[#333840]">{t.brokerTasksQueue}</span>
                         <span className="text-[#aa2d00] font-bold">
-                          {messages.filter(m => m.status === 'queued' || m.status === 'broker_delivering').length} messages
+                          {messages.filter(m => m.status === 'queued' || m.status === 'broker_delivering').length}
                         </span>
                       </div>
                       <div className="flex justify-between text-[11px] font-mono bg-white p-1 rounded border border-[#dddddd]">
-                        <span className="text-[#333840]">notify_queue:</span>
+                        <span className="text-[#333840]">{t.brokerNotifyQueue}</span>
                         <span className="text-[#0a2e0e] font-bold">
-                          {messages.filter(m => m.status === 'processing').length} messages
+                          {messages.filter(m => m.status === 'processing').length}
                         </span>
                       </div>
                     </div>
                   </div>
                   <div className="pt-2 border-t border-[#e0cbaf] flex items-center justify-between text-xs">
-                    <span className="text-[#717680]">DLX / Dead-Letters</span>
+                    <span className="text-[#717680]">{t.brokerDLXCount}</span>
                     <span className="font-mono font-bold text-red-600">{deadLetterCount}</span>
                   </div>
                 </div>
@@ -744,20 +774,20 @@ export default function App() {
                 {/* Node 3: Consumer Worker */}
                 <div className="border border-[#dddddd] rounded-xl p-5 bg-[#fafafa] flex flex-col justify-between space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold tracking-wider text-[#717680] uppercase">3. Consumer Service</span>
+                    <span className="text-xs font-bold tracking-wider text-[#717680] uppercase">{t.consumerNodeTitle}</span>
                     <span className="px-2 py-0.5 bg-[#e0e7ff] text-[#4338ca] text-[10px] font-bold rounded">Event Processor</span>
                   </div>
                   <div>
                     <h3 className="font-semibold text-base mb-1">nest-consumer</h3>
                     <p className="text-xs text-[#717680]">
-                      Listens to queue, performs processing, triggers manual/auto ACK, dispatches to:
+                      {t.consumerNodeDesc}
                     </p>
                     <div className="mt-2 text-xs font-mono bg-white p-1.5 rounded border border-[#dddddd]">
-                      queue: notify_queue
+                      {t.consumerQueueLabel}
                     </div>
                   </div>
                   <div className="pt-2 border-t border-[#dddddd] flex items-center justify-between text-xs">
-                    <span className="text-[#717680]">ACK / NACK Count</span>
+                    <span className="text-[#717680]">{t.consumerAckNackLabel}</span>
                     <span className="font-mono font-bold text-[#181d26]">
                       {ackedCount} <span className="text-gray-400">/</span> <span className="text-red-500">{nackedCount}</span>
                     </span>
@@ -767,7 +797,7 @@ export default function App() {
                 {/* Node 4: Telegram Integrator */}
                 <div className="border border-[#dddddd] rounded-xl p-5 bg-[#0a2e0e]/5 flex flex-col justify-between space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold tracking-wider text-[#0a2e0e] uppercase">4. Telegram Gateway</span>
+                    <span className="text-xs font-bold tracking-wider text-[#0a2e0e] uppercase">{t.telegramGatewayTitle}</span>
                     <span className="px-2 py-0.5 bg-[#dcfce7] text-[#15803d] text-[10px] font-bold rounded">Bot API</span>
                   </div>
                   <div>
@@ -776,20 +806,20 @@ export default function App() {
                       <span>nest-notification</span>
                     </h3>
                     <p className="text-xs text-[#717680]">
-                      Transfers refined payloads payload direct web request endpoints to Telegram servers.
+                      {t.telegramGatewayDesc}
                     </p>
                     <div className="mt-2 text-[11px] leading-relaxed">
-                      Status:{' '}
-                      {telegramStatus === 'idle' && <span className="text-gray-400 font-semibold">Ready & Silent</span>}
-                      {telegramStatus === 'simulated' && <span className="text-[#0a2e0e] font-semibold">Simulated Delivered</span>}
-                      {telegramStatus === 'success' && <span className="text-green-600 font-semibold">SUCCESS: Alert Fired!</span>}
-                      {telegramStatus === 'failed' && <span className="text-red-600 font-semibold">Transport Error</span>}
+                      {t.telegramStatusLabel}{' '}
+                      {telegramStatus === 'idle' && <span className="text-gray-400 font-semibold">{t.telegramStatusIdle}</span>}
+                      {telegramStatus === 'simulated' && <span className="text-[#0a2e0e] font-semibold">{t.telegramStatusSimulated}</span>}
+                      {telegramStatus === 'success' && <span className="text-green-600 font-semibold">{t.telegramStatusSuccess}</span>}
+                      {telegramStatus === 'failed' && <span className="text-red-600 font-semibold">{t.telegramStatusFailed}</span>}
                     </div>
                   </div>
                   <div className="pt-2 border-t border-[#c6dfc9] flex items-center justify-between text-xs">
-                    <span className="text-[#717680]">Config Status</span>
+                    <span className="text-[#717680]">{t.telegramConfigLabel}</span>
                     <span className="text-[11px] font-semibold text-[#0a2e0e]">
-                      {tgConfig.token ? '⚡ Real Delivery Active' : 'Sandbox (Simulated)'}
+                      {tgConfig.token ? t.telegramConfigReal : t.telegramConfigSandbox}
                     </span>
                   </div>
                 </div>
@@ -807,15 +837,15 @@ export default function App() {
                   <div className="flex items-center justify-between">
                     <h2 className="text-lg font-semibold flex items-center space-x-2">
                       <Layers className="w-5 h-5 text-[#aa2d00]" />
-                      <span>Ingest HTTP Payload</span>
+                      <span>{t.ingestPayloadTitle}</span>
                     </h2>
-                    <span className="text-[11px] uppercase tracking-widest text-[#717680] font-bold">Producer API</span>
+                    <span className="text-[11px] uppercase tracking-widest text-[#717680] font-bold">{t.producerApiLabel}</span>
                   </div>
 
                   <div className="space-y-3">
                     <div>
                       <label className="block text-xs font-semibold text-[#181d26] uppercase tracking-wider mb-1">
-                        Message Event Title
+                        {t.messageEventTitle}
                       </label>
                       <input
                         type="text"
@@ -827,7 +857,7 @@ export default function App() {
 
                     <div>
                       <label className="block text-xs font-semibold text-[#181d26] uppercase tracking-wider mb-1">
-                        Payload Notification Message
+                        {t.payloadNotificationMessage}
                       </label>
                       <textarea
                         rows={3}
@@ -840,7 +870,7 @@ export default function App() {
                     <div>
                       <div className="flex justify-between items-center mb-1">
                         <label className="block text-xs font-semibold text-[#181d26] uppercase tracking-wider">
-                          Context JSON Metadata
+                          {t.contextJsonMetadata}
                         </label>
                         <span className="text-[10px] text-gray-400 font-mono">JSON format</span>
                       </div>
@@ -855,10 +885,10 @@ export default function App() {
 
                   <button
                     onClick={dispatchMessage}
-                    className="w-full py-3 bg-[#aa2d00] hover:bg-[#802200] text-white rounded-lg text-sm font-semibold tracking-wide shadow transition-colors flex items-center justify-center space-x-2"
+                    className="w-full py-3 bg-[#aa2d00] hover:bg-[#802200] text-white rounded-lg text-sm font-semibold tracking-wide shadow transition-all flex items-center justify-center space-x-2"
                   >
                     <Send className="w-4 h-4" />
-                    <span>Publish Event (POST request)</span>
+                    <span>{t.publishEventBtn}</span>
                   </button>
                 </div>
 
@@ -867,7 +897,7 @@ export default function App() {
                   <div className="flex items-center justify-between">
                     <h2 className="text-lg font-semibold flex items-center space-x-2 text-[#0a2e0e]">
                       <Users className="w-5 h-5" />
-                      <span>Live Active Receivers ({subscribers.length})</span>
+                      <span>{t.subscribersRosterTitle} ({subscribers.length})</span>
                     </h2>
                     <span className="text-[11px] uppercase tracking-widest text-[#0a2e0e] bg-emerald-100 rounded px-2 py-0.5 font-bold">
                       Polling Active
@@ -875,15 +905,15 @@ export default function App() {
                   </div>
 
                   <p className="text-xs text-[#717680] leading-relaxed">
-                    Choose select recipients from the live registered sessions below. If nobody is ticked, the message broadcasts to <strong>everyone</strong> currently registered!
+                    {t.subscribersSubtitle}
                   </p>
 
                   <div className="space-y-2.5 max-h-[220px] overflow-y-auto pr-1">
                     {subscribers.length === 0 ? (
                       <div className="p-4 border border-dashed border-[#dddddd] rounded-lg bg-gray-50 text-center space-y-1.5">
-                        <p className="text-xs text-semibold text-gray-400">No subscriber sessions found.</p>
+                        <p className="text-xs text-semibold text-gray-400">{t.subscribersEmpty}</p>
                         <p className="text-[11px] text-[#717680] leading-normal">
-                          Send <code>/start</code> или <code>test</code> боту <code className="bg-orange-50 px-1 py-0.5 rounded text-orange-850 font-bold font-mono">@TextAnalyzertbot</code> (или вашему настроенному боту) чтобы мгновенно подключиться!
+                          {t.subscribersHelp}
                         </p>
                       </div>
                     ) : (
@@ -952,18 +982,18 @@ export default function App() {
 
                   {/* MINI FORM TO REGISTER MANUALLY */}
                   <form onSubmit={registerSubscriberManually} className="pt-3 border-t border-[#dddddd] space-y-2">
-                    <span className="block text-[11px] font-semibold text-gray-500 uppercase">Register Recipient Manually</span>
+                    <span className="block text-[11px] font-semibold text-gray-500 uppercase">{t.subscribersManualRegisterTitle}</span>
                     <div className="grid grid-cols-2 gap-2">
                       <input
                         type="text"
-                        placeholder="Numeric Chat ID"
+                        placeholder={t.subscribersManualChatIdPlaceholder}
                         value={newChatId}
                         onChange={(e) => setNewChatId(e.target.value)}
                         className="text-xs bg-white text-gray-800 border border-[#dddddd] rounded px-2.5 py-1.5 focus:outline-none focus:border-[#aa2d00]"
                       />
                       <input
                         type="text"
-                        placeholder="Custom Name"
+                        placeholder={t.subscribersManualNamePlaceholder}
                         value={newName}
                         onChange={(e) => setNewName(e.target.value)}
                         className="text-xs bg-white text-gray-800 border border-[#dddddd] rounded px-2.5 py-1.5 focus:outline-none focus:border-[#aa2d00]"
@@ -975,7 +1005,7 @@ export default function App() {
                       className="w-full py-1.5 border border-[#dddddd] bg-[#fafafa] hover:bg-gray-100 disabled:opacity-50 text-xs text-gray-800 font-semibold rounded flex items-center justify-center space-x-1"
                     >
                       <Plus className="w-3 h-3" />
-                      <span>{isRegisteringSub ? 'Registering...' : 'Add Recipient'}</span>
+                      <span>{isRegisteringSub ? t.subscribersManualAddingBtn : t.subscribersManualAddBtn}</span>
                     </button>
                   </form>
                 </div>
@@ -985,18 +1015,18 @@ export default function App() {
                   <div className="flex items-center justify-between">
                     <h2 className="text-lg font-semibold flex items-center space-x-2 text-[#333840]">
                       <Terminal className="w-5 h-5" />
-                      <span>Fault & Ack Deck</span>
+                      <span>{t.faultDeckTitle}</span>
                     </h2>
-                    <span className="text-[11px] uppercase tracking-widest text-[#717680] font-bold">Consumer Settings</span>
+                    <span className="text-[11px] uppercase tracking-widest text-[#717680] font-bold">{t.faultDeckLabel}</span>
                   </div>
 
                   <div className="space-y-4 text-sm">
                     {/* Auto-acknowledge toggle */}
                     <div className="flex items-center justify-between p-3.5 rounded-lg border border-[#dddddd] bg-[#fafafa]">
                       <div>
-                        <span className="font-semibold block text-xs">Manual Acknowledgement Mode</span>
+                        <span className="font-semibold block text-xs">{t.manualAckTitle}</span>
                         <span className="text-[11px] text-[#717680]">
-                          Wait for explicit <code>channel.ack()</code> approval.
+                          {t.manualAckDesc}
                         </span>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
@@ -1017,9 +1047,9 @@ export default function App() {
                         : 'border-[#dddddd] bg-white text-[#181d26]'
                     }`}>
                       <div>
-                        <span className="font-semibold block text-xs">Simulate Processing Exception</span>
+                        <span className="font-semibold block text-xs">{t.simulateErrTitle}</span>
                         <span className="text-[11px] text-[#717680]">
-                          Triggers DB failure to test manual NACK with Requeues & dead-letter!
+                          {t.simulateErrDesc}
                         </span>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
@@ -1036,7 +1066,7 @@ export default function App() {
                     {/* Delay settings */}
                     <div>
                       <div className="flex justify-between text-xs font-semibold mb-1">
-                        <span>Consumer Latency Delay:</span>
+                        <span>{t.consumerLatencyLabel}</span>
                         <span className="font-mono text-[#aa2d00]">{consumerSettings.processingDelayMs} milliseconds</span>
                       </div>
                       <input
@@ -1062,15 +1092,15 @@ export default function App() {
                   <div className="flex items-center justify-between">
                     <h2 className="text-lg font-semibold flex items-center space-x-2">
                       <RefreshCw className="w-5 h-5 text-[#aa2d00]" />
-                      <span>Broker Envelopes Monitor</span>
+                      <span>{t.brokerMonitorTitle}</span>
                     </h2>
-                    <span className="text-[10px] text-[#717680] font-mono">Durable Broker State</span>
+                    <span className="text-[10px] text-[#717680] font-mono">{t.brokerMonitorSubtitle}</span>
                   </div>
 
                   <div className="space-y-3 max-h-[280px] overflow-y-auto pr-1">
                     {messages.length === 0 ? (
                       <div className="text-center py-10 border border-dashed border-[#dddddd] rounded-lg">
-                        <p className="text-sm text-[#717680]">No active message bundles in brokers queue.</p>
+                        <p className="text-sm text-[#717680]">{t.brokerMonitorEmpty}</p>
                       </div>
                     ) : (
                       [...messages].reverse().map((msg) => (
@@ -1093,7 +1123,7 @@ export default function App() {
                               <span className="font-semibold text-xs">{msg.title}</span>
                               {msg.retryCount > 0 && (
                                 <span className="px-1.5 py-0.5 bg-yellow-100 text-yellow-800 text-[9px] font-semibold rounded animate-pulse">
-                                  Retry x{msg.retryCount}
+                                  {t.brokerRetryTag} x{msg.retryCount}
                                 </span>
                               )}
                             </div>
@@ -1101,19 +1131,19 @@ export default function App() {
                               {msg.message}
                             </p>
                             <div className="text-[10px] text-gray-400 font-mono">
-                              Metadata: {JSON.stringify(msg.metadata)}
+                              {t.brokerMetadataLabel} {JSON.stringify(msg.metadata)}
                             </div>
                           </div>
 
                           <div className="flex flex-col items-end space-y-1.5 self-stretch md:self-auto justify-center">
                             {/* Operational Status tags */}
                             <span className="text-[11px] font-semibold">
-                              {msg.status === 'queued' && '📥 Queue Intake'}
-                              {msg.status === 'broker_delivering' && '🔄 Routing...'}
-                              {msg.status === 'processing' && '⚙️ Active Worker'}
-                              {msg.status === 'acked' && '✅ ACK Confirm'}
-                              {msg.status === 'nacked' && '❌ NACK Purge'}
-                              {msg.status === 'dead_letter' && '💀 Dead Letter'}
+                              {msg.status === 'queued' && t.brokerStatusIntake}
+                              {msg.status === 'broker_delivering' && t.brokerStatusRouting}
+                              {msg.status === 'processing' && t.brokerStatusWorker}
+                              {msg.status === 'acked' && t.brokerStatusAck}
+                              {msg.status === 'nacked' && t.brokerStatusNack}
+                              {msg.status === 'dead_letter' && t.brokerStatusDead}
                             </span>
 
                             {/* Actions needed if manual ack is on */}
@@ -1146,20 +1176,20 @@ export default function App() {
                     <div className="flex items-center space-x-2">
                       <Terminal className="w-4 h-4 text-[#fcab79]" />
                       <span className="text-xs font-mono font-bold text-white tracking-wider">
-                        Microservices STDOUT (System Unified Logs)
+                        {t.stdoutTitle}
                       </span>
                     </div>
                     <button
                       onClick={() => setLogs([])}
                       className="text-[10px] text-[#717680] border border-[#2d3139] px-2 py-0.5 rounded hover:text-white transition-colors"
                     >
-                      CLEAR
+                      {t.stdoutClearBtn}
                     </button>
                   </div>
 
                   <div className="p-4 font-mono text-[11px] leading-relaxed h-[240px] overflow-y-auto space-y-2 text-gray-300">
                     {logs.length === 0 ? (
-                      <p className="text-gray-500 italic text-center py-10">No new streams registered.</p>
+                      <p className="text-gray-500 italic text-center py-10">{t.stdoutNoStreams}</p>
                     ) : (
                       logs.map((log) => (
                         <div key={log.id} className="flex items-start space-x-1.5 border-b border-white/5 pb-1 select-all">
@@ -1194,24 +1224,22 @@ export default function App() {
             <div className="bg-[#f5e9d4]/30 rounded-xl border border-[#dddddd] p-8 mt-12 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
               <div className="md:col-span-7 space-y-4">
                 <div className="inline-flex items-center space-x-1.5 text-xs text-[#0a2e0e] bg-green-100 px-3 py-1 rounded-full font-bold border border-green-200">
-                  <Bot className="w-3.5 h-3.5" />
-                  <span>Integrated Bot API Module Client</span>
+                   <Bot className="w-3.5 h-3.5" />
+                  <span>{t.sandboxBadge}</span>
                 </div>
                 <h3 className="text-2xl font-semibold tracking-tight text-[#181d26]">
-                  Virtual Sandbox Telegram Client
+                  {t.sandboxTitle}
                 </h3>
                 <p className="text-sm text-[#333840] leading-relaxed">
-                  When messages are successfully processed by <code>nest-consumer</code>, a callback event executes on the Telegram Bot integration layer.
-                  By default, messages populate this real-time sandbox phone on the right. 
-                  Want them delivered live on your cellular phone? Click <strong>Configure Live Bot</strong> in the corner to integrate a real key instantly!
+                  {t.sandboxDesc}
                 </p>
 
                 <div className="bg-white/80 rounded-lg p-4 border border-[#dddddd] text-xs">
-                  <h4 className="font-semibold text-xs mb-1.5 text-[#aa2d00]">Real Telegram Channel Setup Guide</h4>
+                  <h4 className="font-semibold text-xs mb-1.5 text-[#aa2d00]">{t.sandboxGuideTitle}</h4>
                   <ol className="list-decimal list-inside space-y-1 text-gray-600 font-medium">
-                    <li>Open Telegram app and message <code>@BotFather</code> to register a new bot and grab the Token.</li>
-                    <li>Message the bot <code>@userinfobot</code> to grab your unique Numeric Chat ID.</li>
-                    <li>Enter them into the <strong>Configure Live Bot</strong> option above!</li>
+                    <li>{t.sandboxGuideStep1}</li>
+                    <li>{t.sandboxGuideStep2}</li>
+                    <li>{t.sandboxGuideStep3}</li>
                   </ol>
                 </div>
               </div>
@@ -1242,9 +1270,9 @@ export default function App() {
                     </div>
 
                     {/* Messages Panel */}
-                    <div className="relative z-10 flex-1 overflow-y-auto space-y-2 pr-1 pt-1 flex flex-col justify-end">
+                    <div className="relative z-10 flex-1 overflow-y-auto space-y-2 pr-1 pt-1 flex flex-col justify-end w-full">
                       {messages.filter(m => m.status === 'acked' || m.status === 'processing').length === 0 ? (
-                        <p className="text-gray-400 italic text-center py-10 text-[11px]">Awaiting triggers from queue...</p>
+                        <p className="text-gray-400 italic text-center py-10 text-[11px]">{t.sandboxEmptyText}</p>
                       ) : (
                         messages
                           .filter(m => m.status === 'acked' || m.status === 'processing')
@@ -1269,7 +1297,7 @@ export default function App() {
                     {/* Bottom Phone Bar */}
                     <div className="relative z-10 pt-2 border-t border-[#181d26]/10 mt-2 flex items-center justify-between">
                       <div className="text-[9px] bg-white text-gray-500 rounded-full w-full py-1 px-3 text-center">
-                        ReadOnly Sandbox Console
+                        {t.sandboxConsoleLabel}
                       </div>
                     </div>
                   </div>

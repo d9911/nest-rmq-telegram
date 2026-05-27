@@ -237,7 +237,7 @@ async function pollTelegramUpdates() {
                 })
               });
             }
-          } else if (userText.trim().toLowerCase() === '/start') {
+          } else if (userText.trim().toLowerCase() === '/start' || userText.trim().toLowerCase() === 'start') {
             const textMsg = `👋 **Привет, ${first_name || 'друг'}!**\n\n` +
                             `⚙️ Я успешно авторизовал твой **Chat ID**: \`${chatIdVal}\`\n\n` +
                             `✅ Устройство сопряжено с Web-панелью системы!\n` +
@@ -253,21 +253,9 @@ async function pollTelegramUpdates() {
               })
             });
           } else {
-            // Reply acknowledging their normal text message
-            const textMsg = `🤖 **Я услышал твой текстовый сигнал!**\n\n` +
-                            `Текст: \`${userText}\`\n` +
-                            `Сопряженный Chat ID: \`${chatIdVal}\`\n\n` +
-                            `💡 Напомню, что ты в любой момент можешь отправить мне **голосовое или аудио-сообщение**, и я переведу его в готовый текст! Попробуй записать голос!`;
-
-            await fetch(replyUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                chat_id: chatIdVal,
-                text: textMsg,
-                parse_mode: 'Markdown'
-              })
-            });
+            // Do not reply to any other normal text messages to avoid request spam.
+            // Just update subscriber state silently.
+            console.log(`[Telegram Bot Listener] Silently registered text input from Chat ID ${chatIdVal} without sending spam reply.`);
           }
         }
       }
