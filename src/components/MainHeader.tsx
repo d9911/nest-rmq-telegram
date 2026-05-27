@@ -18,7 +18,7 @@ export function MainHeader({ t, lang, setLang, tgConfig, showConfig, setShowConf
   return (
     <nav id="top-nav" className="sticky top-0 z-50 h-16 bg-[#07090E]/95 border-b border-slate-800 shadow-xl backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-full flex items-center justify-between">
-        <div className="flex items-center space-x-3 sm:space-x-8 min-w-0">
+        <div className="flex items-center space-x-4 sm:space-x-8 min-w-0">
           {/* FSD Grid Icon & Title */}
           <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600/20 border border-indigo-500/30 text-indigo-400">
@@ -31,24 +31,24 @@ export function MainHeader({ t, lang, setLang, tgConfig, showConfig, setShowConf
           <div className="hidden md:flex items-center space-x-1 border border-slate-800 bg-[#05060A] p-1 rounded-lg">
             <button
               onClick={() => setActiveTab('playground')}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold tracking-wide transition-all ${
-                activeTab === 'playground' ? 'bg-[#aa2d00] text-white shadow-md' : 'text-slate-450 text-slate-450 text-slate-400 hover:text-white'
+              className={`px-2.5 md:px-3 py-1 md:py-1.5 rounded-md text-[11px] md:text-xs font-semibold tracking-wide transition-all ${
+                activeTab === 'playground' ? 'bg-[#aa2d00] text-white shadow-md' : 'text-slate-400 hover:text-white'
               }`}
             >
               {t.interactivePlayground}
             </button>
             <button
               onClick={() => setActiveTab('code')}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold tracking-wide transition-all ${
-                activeTab === 'code' ? 'bg-[#aa2d00] text-white shadow-md' : 'text-slate-450 text-slate-400 hover:text-white'
+              className={`px-2.5 md:px-3 py-1 md:py-1.5 rounded-md text-[11px] md:text-xs font-semibold tracking-wide transition-all ${
+                activeTab === 'code' ? 'bg-[#aa2d00] text-white shadow-md' : 'text-slate-400 hover:text-white'
               }`}
             >
               {t.sourceCodeIde}
             </button>
             <button
               onClick={() => setActiveTab('docs')}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold tracking-wide transition-all ${
-                activeTab === 'docs' ? 'bg-[#aa2d00] text-white shadow-md' : 'text-slate-450 text-slate-400 hover:text-white'
+              className={`px-2.5 md:px-3 py-1 md:py-1.5 rounded-md text-[11px] md:text-xs font-semibold tracking-wide transition-all ${
+                activeTab === 'docs' ? 'bg-[#aa2d00] text-white shadow-md' : 'text-slate-400 hover:text-white'
               }`}
             >
               {t.documentation}
@@ -96,7 +96,7 @@ export function MainHeader({ t, lang, setLang, tgConfig, showConfig, setShowConf
               e.preventDefault()
               setActiveTab('code')
             }}
-            className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200 text-xs font-semibold tracking-wide hover:bg-slate-700 hover:text-white transition-colors shrink-0 hidden md:inline-block"
+            className="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200 text-xs font-semibold tracking-wide hover:bg-slate-700 hover:text-white transition-colors shrink-0 hidden min-[1500px]:inline-block"
           >
             {t.copySourceCodeBtn}
           </a>

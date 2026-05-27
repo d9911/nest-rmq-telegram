@@ -7,9 +7,9 @@ export interface CodeFile {
 
 export const CODE_FILES: CodeFile[] = [
   {
-    name: "docker-compose.yml",
-    path: "docker-compose.yml",
-    language: "yaml",
+    name: 'docker-compose.yml',
+    path: 'docker-compose.yml',
+    language: 'yaml',
     content: `version: '3.9'
 
 services:
@@ -79,12 +79,12 @@ services:
 
 volumes:
   rmq_data:
-`
+`,
   },
   {
-    name: "makefile",
-    path: "makefile",
-    language: "makefile",
+    name: 'makefile',
+    path: 'makefile',
+    language: 'makefile',
     content: `.PHONY: up down build logs restart clean shell-rmq test
 
 # Launch all microservices, RabbitMQ, and frontends in background mode
@@ -118,12 +118,12 @@ test:
 # Full purge of containers, networks, and RabbitMQ persistent volumes
 clean:
 	docker-compose down -v
-`
+`,
   },
   {
-    name: "README.md",
-    path: "README.md",
-    language: "markdown",
+    name: 'README.md',
+    path: 'README.md',
+    language: 'markdown',
     content: `# NestJS & RabbitMQ Microservices Workspace
 
 This repository houses a highly scalable, SOLID-compliant microservices ecosystem built on NestJS (with Fastify) with RabbitMQ message queuing and the Telegram Bot API.
@@ -154,12 +154,12 @@ This repository houses a highly scalable, SOLID-compliant microservices ecosyste
    \`\`\`
 3. Access RabbitMQ Management Dashboard at [http://localhost:15672](http://localhost:15672) (guest:guest).
 4. Access Producer Swagger Documentation at [http://localhost:3001/api/docs](http://localhost:3001/api/docs).
-`
+`,
   },
   {
-    name: "package.json (Producer)",
-    path: "services/producer/package.json",
-    language: "json",
+    name: 'package.json (Producer)',
+    path: 'services/producer/package.json',
+    language: 'json',
     content: `{
   "name": "producer-service",
   "version": "1.0.0",
@@ -193,12 +193,12 @@ This repository houses a highly scalable, SOLID-compliant microservices ecosyste
     "ts-jest": "^29.1.2",
     "typescript": "^5.3.3"
   }
-}`
+}`,
   },
   {
-    name: "main.ts (Producer)",
-    path: "services/producer/src/main.ts",
-    language: "typescript",
+    name: 'main.ts (Producer)',
+    path: 'services/producer/src/main.ts',
+    language: 'typescript',
     content: `import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { ValidationPipe } from '@nestjs/common';
@@ -234,12 +234,12 @@ async function bootstrap() {
   console.log(\`Producer is executing cleanly on http://localhost:\${port}/api/docs\`);
 }
 bootstrap();
-`
+`,
   },
   {
-    name: "app.module.ts (Producer)",
-    path: "services/producer/src/app.module.ts",
-    language: "typescript",
+    name: 'app.module.ts (Producer)',
+    path: 'services/producer/src/app.module.ts',
+    language: 'typescript',
     content: `import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ProducerController } from './producer.controller';
@@ -265,12 +265,12 @@ import { ProducerService } from './producer.service';
   providers: [ProducerService],
 })
 export class AppModule {}
-`
+`,
   },
   {
-    name: "send-event.dto.ts (Producer)",
-    path: "services/producer/src/dto/send-event.dto.ts",
-    language: "typescript",
+    name: 'send-event.dto.ts (Producer)',
+    path: 'services/producer/src/dto/send-event.dto.ts',
+    language: 'typescript',
     content: `import { IsString, IsNotEmpty, IsObject, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -300,12 +300,12 @@ export class SendEventDto {
   @IsObject()
   metadata?: Record<string, any>;
 }
-`
+`,
   },
   {
-    name: "producer.controller.ts (Producer)",
-    path: "services/producer/src/producer.controller.ts",
-    language: "typescript",
+    name: 'producer.controller.ts (Producer)',
+    path: 'services/producer/src/producer.controller.ts',
+    language: 'typescript',
     content: `import { Controller, Post, Body, HttpCode, HttpStatus, Logger } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ProducerService } from './producer.service';
@@ -329,12 +329,12 @@ export class ProducerController {
     return result;
   }
 }
-`
+`,
   },
   {
-    name: "producer.service.ts (Producer)",
-    path: "services/producer/src/producer.service.ts",
-    language: "typescript",
+    name: 'producer.service.ts (Producer)',
+    path: 'services/producer/src/producer.service.ts',
+    language: 'typescript',
     content: `import { Injectable, Inject, Logger } from '@nestjs/microservices';
 import { ClientProxy } from '@nestjs/microservices';
 import { v4 as uuidv4 } from 'uuid';
@@ -365,7 +365,7 @@ export class ProducerService {
     try {
       // client.emit sends an event pattern message queue transaction securely to the queue
       await lastValueFrom(this.client.emit('process_task', messageEnvelope));
-      
+
       this.logger.log(\`Confirmed execution packet delivery for UUID [\${transactionId}]\`);
       return {
         success: true,
@@ -379,12 +379,12 @@ export class ProducerService {
     }
   }
 }
-`
+`,
   },
   {
-    name: "package.json (Consumer)",
-    path: "services/consumer/package.json",
-    language: "json",
+    name: 'package.json (Consumer)',
+    path: 'services/consumer/package.json',
+    language: 'json',
     content: `{
   "name": "consumer-service",
   "version": "1.0.0",
@@ -411,12 +411,12 @@ export class ProducerService {
     "ts-jest": "^29.1.2",
     "typescript": "^5.3.3"
   }
-}`
+}`,
   },
   {
-    name: "main.ts (Consumer)",
-    path: "services/consumer/src/main.ts",
-    language: "typescript",
+    name: 'main.ts (Consumer)',
+    path: 'services/consumer/src/main.ts',
+    language: 'typescript',
     content: `import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { AppModule } from './app.module';
@@ -442,12 +442,12 @@ async function bootstrap() {
   console.log('Consumer Microservice started successfully listening to: tasks_queue');
 }
 bootstrap();
-`
+`,
   },
   {
-    name: "app.module.ts (Consumer)",
-    path: "services/consumer/src/app.module.ts",
-    language: "typescript",
+    name: 'app.module.ts (Consumer)',
+    path: 'services/consumer/src/app.module.ts',
+    language: 'typescript',
     content: `import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConsumerController } from './consumer.controller';
@@ -471,12 +471,12 @@ import { ConsumerController } from './consumer.controller';
   controllers: [ConsumerController],
 })
 export class AppModule {}
-`
+`,
   },
   {
-    name: "consumer.controller.ts (Consumer)",
-    path: "services/consumer/src/consumer.controller.ts",
-    language: "typescript",
+    name: 'consumer.controller.ts (Consumer)',
+    path: 'services/consumer/src/consumer.controller.ts',
+    language: 'typescript',
     content: `import { Controller, Logger, Inject } from '@nestjs/common';
 import { MessagePattern, Payload, Ctx, RmqContext, ClientProxy } from '@nestjs/microservices';
 import { lastValueFrom } from 'rxjs';
@@ -499,7 +499,7 @@ export class ConsumerController {
     try {
       // Parse payload content
       const { title, message, timestamp } = data;
-      
+
       this.logger.log(\`Processing Payload: [\${title}] - \${message}\`);
 
       // Business logic goes here (e.g., db writes, calculations)...
@@ -517,7 +517,7 @@ export class ConsumerController {
       this.logger.log(\`Successfully ACKed message transaction \${data.id}\`);
     } catch (error) {
       this.logger.error(\`Failed to resolve task \${data.id}: \${error}\`);
-      
+
       // Error recovery policy: NACK with requeue=true to retry, or push to dead letter pipeline
       const hasRetried = originalMessage.fields.redelivered;
       if (!hasRetried) {
@@ -530,12 +530,12 @@ export class ConsumerController {
     }
   }
 }
-`
+`,
   },
   {
-    name: "package.json (Notification)",
-    path: "services/notification/package.json",
-    language: "json",
+    name: 'package.json (Notification)',
+    path: 'services/notification/package.json',
+    language: 'json',
     content: `{
   "name": "notification-service",
   "version": "1.0.0",
@@ -560,12 +560,12 @@ export class ConsumerController {
     "jest": "^29.7.0",
     "typescript": "^5.3.3"
   }
-}`
+}`,
   },
   {
-    name: "main.ts (Notification)",
-    path: "services/notification/src/main.ts",
-    language: "typescript",
+    name: 'main.ts (Notification)',
+    path: 'services/notification/src/main.ts',
+    language: 'typescript',
     content: `import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { AppModule } from './app.module';
@@ -590,12 +590,12 @@ async function bootstrap() {
   console.log('Notification Microservice is running and listening on: notify_queue');
 }
 bootstrap();
-`
+`,
   },
   {
-    name: "notification.controller.ts (Notification)",
-    path: "services/notification/src/notification.controller.ts",
-    language: "typescript",
+    name: 'notification.controller.ts (Notification)',
+    path: 'services/notification/src/notification.controller.ts',
+    language: 'typescript',
     content: `import { Controller, Logger } from '@nestjs/common';
 import { MessagePattern, Payload, Ctx, RmqContext } from '@nestjs/microservices';
 
@@ -622,7 +622,7 @@ export class NotificationController {
 
     try {
       this.logger.log(\`Delivering messages payload to Telegram Chat: \${tgChatId}\`);
-      
+
       const payloadUrl = \`https://api.telegram.org/bot\${tgBotToken}/sendMessage\`;
       const response = await fetch(payloadUrl, {
         method: 'POST',
@@ -647,6 +647,6 @@ export class NotificationController {
     }
   }
 }
-`
-  }
+`,
+  },
 ]
