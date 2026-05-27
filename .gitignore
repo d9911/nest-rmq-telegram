@@ -14,7 +14,7 @@ coverage/
 !.vscode/extensions.json
 !.vscode/*.code-snippets
 
-*/dist/**
+**/dist/
 */.env
 */yarn.lock
 yarn.lock

@@ -4,6 +4,7 @@ import { createServer as createViteServer } from 'vite'
 import dotenv from 'dotenv'
 import fs from 'fs'
 import { GoogleGenAI } from '@google/genai'
+import { exec } from 'child_process'
 
 // Load environment configurations from .env or .env.example
 if (fs.existsSync('.env')) {
@@ -449,7 +450,14 @@ async function startServer() {
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[Ecosystem Server] running at http://0.0.0.0:${PORT}`)
+    const url = `http://localhost:${PORT}`
+    console.log(`[Ecosystem Server] running at ${url}`)
+    
+    // Automatically open the browser on startup
+    const startCmd = process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'start' : 'xdg-open'
+    exec(`${startCmd} ${url}`, (err) => {
+      if (err) console.error(`Failed to automatically open browser: ${err.message}`)
+    })
   })
 }
 
