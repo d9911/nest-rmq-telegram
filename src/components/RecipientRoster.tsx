@@ -92,7 +92,6 @@ export function RecipientRoster({
         )}
       </div>
 
-      {/* Manual Input Form Add Recipient */}
       <form onSubmit={registerSubscriberManually} className="bg-[#05060A]/60 rounded-xl p-3 border border-slate-800/80 space-y-2.5 text-xs font-sans">
         <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block border-b border-slate-850 pb-1.5">{t.subscribersManualRegisterTitle}</span>
 

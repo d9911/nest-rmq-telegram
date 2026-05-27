@@ -69,7 +69,6 @@ export function TrafficMonitor({ t, messages, setMessages, manualAck, manualNack
 
                   <p className="text-[11px] text-slate-300 leading-normal break-words">{msg.message}</p>
 
-                  {/* Visualizer Metadata indicators */}
                   {Object.keys(msg.metadata).length > 0 && (
                     <div className="flex items-center space-x-1.5 pt-1 text-[10px] font-mono text-slate-500">
                       <span>{t.brokerHeaderArgs}</span>
@@ -77,7 +76,6 @@ export function TrafficMonitor({ t, messages, setMessages, manualAck, manualNack
                     </div>
                   )}
 
-                  {/* Print Retries Stack */}
                   {msg.retryCount > 0 && (
                     <span className="text-[9.5px] text-amber-400 font-mono flex items-center gap-1.5 pt-0.5">
                       <Clock className="h-3 w-3 inline" />
@@ -89,7 +87,6 @@ export function TrafficMonitor({ t, messages, setMessages, manualAck, manualNack
                   )}
                 </div>
 
-                {/* Consumer Safety Actions (Operator Handlers in case manual Acknowledge mode is active) */}
                 <div className="flex items-center gap-1.5 mt-2 sm:mt-0 shrink-0 font-sans">
                   {msg.status === 'processing' && !autoAck && (
                     <div className="flex items-center gap-1.5 bg-[#0A050D] p-1 rounded-lg border border-slate-800">

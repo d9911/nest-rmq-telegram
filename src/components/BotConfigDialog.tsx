@@ -19,9 +19,8 @@ export function BotConfigDialog({ t, tgConfig, setTgConfig, showConfig, setShowC
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Click back drop */}
       <div onClick={() => setShowConfig(false)} className="absolute inset-0 bg-[#020305]/80 backdrop-blur-xs transition-opacity duration-300 pointer-events-auto" />
-      {/* Modal Dialog Card Container */}
+
       <div className="bg-[#0D111A] rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-800 animate-slide-up relative z-50 p-6 space-y-4">
         <div className="flex items-center justify-between border-b border-slate-850 pb-3">
           <h3 className="text-sm font-bold uppercase tracking-wider text-slate-205 text-white flex items-center gap-1.5 leading-none">

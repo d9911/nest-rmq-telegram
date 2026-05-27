@@ -19,7 +19,6 @@ export function MainHeader({ t, lang, setLang, tgConfig, showConfig, setShowConf
     <nav id="top-nav" className="sticky top-0 z-50 h-16 bg-[#07090E]/95 border-b border-slate-800 shadow-xl backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-full flex items-center justify-between">
         <div className="flex items-center space-x-4 sm:space-x-8 min-w-0">
-          {/* FSD Grid Icon & Title */}
           <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600/20 border border-indigo-500/30 text-indigo-400">
               <Layers className="h-5 w-5" />
@@ -27,7 +26,6 @@ export function MainHeader({ t, lang, setLang, tgConfig, showConfig, setShowConf
             <span className="font-semibold text-sm sm:text-base md:text-lg tracking-tight text-white truncate max-w-[110px] xs:max-w-[180px] sm:max-w-none">{t.workspaceTitle}</span>
           </div>
 
-          {/* Tab Navigation links */}
           <div className="hidden md:flex items-center space-x-1 border border-slate-800 bg-[#05060A] p-1 rounded-lg">
             <button
               onClick={() => setActiveTab('playground')}
@@ -57,7 +55,6 @@ export function MainHeader({ t, lang, setLang, tgConfig, showConfig, setShowConf
         </div>
 
         <div className="flex items-center space-x-2 sm:space-x-4 shrink-0">
-          {/* Language Toggle Selector */}
           <div className="flex bg-slate-900 p-0.5 sm:p-1 rounded-lg border border-slate-800 items-center text-[10px] sm:text-[11px] shrink-0">
             <button
               onClick={() => {
@@ -79,7 +76,6 @@ export function MainHeader({ t, lang, setLang, tgConfig, showConfig, setShowConf
             </button>
           </div>
 
-          {/* Telegram config indicator */}
           <button
             onClick={() => setShowConfig(!showConfig)}
             className={`flex items-center space-x-1.5 sm:space-x-2 px-2.5 sm:px-3 py-1.5 rounded-lg border text-xs font-semibold tracking-wide transition-colors shrink-0 ${

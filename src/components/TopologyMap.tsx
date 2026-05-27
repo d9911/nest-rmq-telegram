@@ -14,7 +14,6 @@ interface TopologyMapProps {
 export function TopologyMap({ t, tasksQueueItems, tasksQueueProcessing, notifyQueueItems, activeWorkerId }: TopologyMapProps) {
   return (
     <div id="topology-map-deck" className="rounded-xl border border-slate-800 bg-slate-900/10 p-6 shadow-sm relative overflow-hidden">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-6 border-b border-slate-800/80 pb-4">
         <div>
           <h3 className="font-sans font-semibold text-white text-base flex items-center gap-2">
@@ -24,7 +23,6 @@ export function TopologyMap({ t, tasksQueueItems, tasksQueueProcessing, notifyQu
           <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">Watch transactional events traverse between microservice queues and trigger manual actions.</p>
         </div>
 
-        {/* Quick Stats Banner */}
         <div className="flex gap-2 font-mono text-xs">
           <span className="rounded bg-sky-955/70 text-sky-400 border border-sky-900/40 px-2.5 py-1 font-semibold flex items-center gap-1">
             tasks: <b className="text-sky-300 font-bold">{tasksQueueItems.length + tasksQueueProcessing.length}</b>
@@ -35,9 +33,7 @@ export function TopologyMap({ t, tasksQueueItems, tasksQueueProcessing, notifyQu
         </div>
       </div>
 
-      {/* Interactive Topology Visual Flowchart Grid */}
       <div className="grid grid-cols-1 md:grid-cols-11 gap-4 items-center relative py-4">
-        {/* 1. PORT: REST API Microservice (Producer) */}
         <div className="md:col-span-2 flex flex-col items-center bg-[#07090E] border border-slate-800 rounded-lg p-3 text-center shadow-xs">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600/10 border border-indigo-500/20 text-indigo-400 mb-2">
             <Terminal className="h-5 w-5" />
@@ -47,13 +43,11 @@ export function TopologyMap({ t, tasksQueueItems, tasksQueueProcessing, notifyQu
           <div className="inline-flex rounded bg-emerald-955/80 text-emerald-400 px-1.5 py-0.2 text-[9px] font-bold uppercase mt-2 font-mono border border-emerald-900/40">REST Active</div>
         </div>
 
-        {/* Link arrow 1 */}
         <div className="hidden md:flex md:col-span-1 flex-col items-center justify-center text-slate-600">
           <ArrowRight className="h-5 w-5 animate-pulse text-indigo-500/50" />
           <span className="text-[9px] font-mono text-slate-500 mt-1">process_task</span>
         </div>
 
-        {/* 2. RabbitMQ Broker Pipeline (Exchanges & Queues) */}
         <div className="md:col-span-5 border border-slate-800 rounded-xl p-4 bg-[#07090E]/40 space-y-4">
           <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2">
             <div className="flex items-center gap-1.5">
@@ -63,14 +57,12 @@ export function TopologyMap({ t, tasksQueueItems, tasksQueueProcessing, notifyQu
             <span className="text-[10px] font-mono text-slate-500">Port 5672</span>
           </div>
 
-          {/* tasks_queue block */}
           <div className="bg-[#07090E] rounded-lg p-3 border border-slate-800 relative">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-semibold text-slate-300 font-mono">tasks_queue</span>
               <span className="text-[11px] font-semibold text-indigo-400 font-mono">durable: true</span>
             </div>
 
-            {/* Visualizer Queue Slot */}
             <div className="min-h-12 border border-dashed border-slate-800 rounded p-1.5 flex flex-wrap gap-1.5 items-center justify-start bg-[#05060A]">
               {tasksQueueItems.length === 0 && tasksQueueProcessing.length === 0 ? (
                 <span className="text-[9px] text-slate-600 italic mx-auto font-mono text-center">Queue Empty. Publish events to see packets...</span>
@@ -102,14 +94,12 @@ export function TopologyMap({ t, tasksQueueItems, tasksQueueProcessing, notifyQu
             </div>
           </div>
 
-          {/* notify_queue block */}
           <div className="bg-[#07090E] rounded-lg p-3 border border-slate-800">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-semibold text-slate-300 font-mono">notify_queue</span>
               <span className="text-[11px] font-semibold text-indigo-400 font-mono">durable: true</span>
             </div>
 
-            {/* Visualizer Queue Slot Container */}
             <div className="min-h-12 border border-dashed border-slate-800 rounded p-1.5 flex flex-wrap gap-1.5 items-center justify-start bg-[#05060A]">
               {notifyQueueItems.length === 0 ? (
                 <span className="text-[9px] text-slate-500 italic mx-auto font-mono text-center">Queue Empty. Awaiting processed tasks...</span>
@@ -132,13 +122,11 @@ export function TopologyMap({ t, tasksQueueItems, tasksQueueProcessing, notifyQu
           </div>
         </div>
 
-        {/* Link arrow 2 */}
         <div className="hidden md:flex md:col-span-1 flex-col items-center justify-center text-slate-600">
           <ArrowRight className="h-5 w-5 animate-pulse text-indigo-500/50" />
           <span className="text-[9px] font-mono text-slate-500 mt-1">ack / nack</span>
         </div>
 
-        {/* 3. Multi-threaded Consumer Workers Task executing */}
         <div className="md:col-span-2 flex flex-col gap-2">
           <div className="flex flex-col items-center bg-[#07090E] border border-slate-800 rounded-lg p-3 text-center shadow-xs">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600/10 border border-indigo-500/20 text-indigo-400 mb-2">
@@ -148,7 +136,6 @@ export function TopologyMap({ t, tasksQueueItems, tasksQueueProcessing, notifyQu
             <span className="text-[10px] text-slate-500 font-mono mt-0.5">Nest Worker Pool</span>
           </div>
 
-          {/* Workers Thread visual representations */}
           <div className="space-y-1">
             {[1, 2, 3].map((workerId) => {
               const isActive = activeWorkerId === workerId
@@ -168,7 +155,6 @@ export function TopologyMap({ t, tasksQueueItems, tasksQueueProcessing, notifyQu
         </div>
       </div>
 
-      {/* Bottom explanations panel */}
       <div className="mt-6 pt-5 border-t border-slate-800 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-400 leading-relaxed font-sans">
         <div>
           <span className="font-semibold text-white block mb-1">1. Ensures Idempotency</span>

@@ -20,7 +20,6 @@ export function SimulationControls({ t, consumerSettings, setConsumerSettings }:
       </div>
 
       <div className="space-y-4 text-xs">
-        {/* Auto Ack Switch */}
         <div className="flex items-center justify-between p-2.5 bg-[#05060A]/60 border border-slate-800/80 rounded-lg">
           <div className="space-y-0.5 pr-2">
             <span className="font-semibold text-slate-200 block">{t.manualAckTitle}</span>
@@ -34,7 +33,6 @@ export function SimulationControls({ t, consumerSettings, setConsumerSettings }:
           </button>
         </div>
 
-        {/* Simulate Exception Switch */}
         <div className="flex items-center justify-between p-2.5 bg-[#05060A]/60 border border-slate-800/80 rounded-lg">
           <div className="space-y-0.5 pr-2">
             <span className="font-semibold text-slate-200 block">{t.simulateErrTitle}</span>
@@ -48,7 +46,6 @@ export function SimulationControls({ t, consumerSettings, setConsumerSettings }:
           </button>
         </div>
 
-        {/* Delay Slider */}
         <div className="space-y-2 bg-[#05060A]/60 p-3 border border-slate-800/80 rounded-lg">
           <div className="flex justify-between items-center text-[11px]">
             <span className="font-semibold text-slate-300">{t.consumerLatencyLabel}</span>

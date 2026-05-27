@@ -26,7 +26,6 @@ export function CodeExporter({ t, selectedFile, setSelectedFile, copied, handleC
 
   return (
     <div id="code-ide" className="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-      {/* 2.1 DIR TREE SIDEBAR EXPLORER */}
       <div className="lg:col-span-4 bg-[#0D111A] border border-slate-800 rounded-xl p-5 space-y-4 flex flex-col justify-between">
         <div className="space-y-4">
           <div className="font-sans border-b border-slate-850 pb-3 flex items-center justify-between">
@@ -38,7 +37,6 @@ export function CodeExporter({ t, selectedFile, setSelectedFile, copied, handleC
           </div>
 
           <div className="space-y-2 text-left text-xs font-mono select-none">
-            {/* Folder 1: Infrastructure */}
             <div className="space-y-1">
               <div onClick={() => toggleDirectory('infra')} className="flex items-center space-x-2 p-1.5 hover:bg-slate-900 rounded cursor-pointer text-slate-300 font-semibold">
                 {openDirs['infra'] ? <FolderOpen className="w-4 h-4 text-amber-400 shrink-0" /> : <Folder className="w-4 h-4 text-amber-400 shrink-0" />}
@@ -63,7 +61,6 @@ export function CodeExporter({ t, selectedFile, setSelectedFile, copied, handleC
               )}
             </div>
 
-            {/* Folder 2: nest-producer */}
             <div className="space-y-1">
               <div onClick={() => toggleDirectory('producer')} className="flex items-center space-x-2 p-1.5 hover:bg-slate-900 rounded cursor-pointer text-slate-300 font-semibold">
                 {openDirs['producer'] ? <FolderOpen className="w-4 h-4 text-amber-400 shrink-0" /> : <Folder className="w-4 h-4 text-amber-400 shrink-0" />}
@@ -88,7 +85,6 @@ export function CodeExporter({ t, selectedFile, setSelectedFile, copied, handleC
               )}
             </div>
 
-            {/* Folder 3: nest-consumer */}
             <div className="space-y-1">
               <div onClick={() => toggleDirectory('consumer')} className="flex items-center space-x-2 p-1.5 hover:bg-slate-900 rounded cursor-pointer text-slate-300 font-semibold">
                 {openDirs['consumer'] ? <FolderOpen className="w-4 h-4 text-amber-400 shrink-0" /> : <Folder className="w-4 h-4 text-amber-400 shrink-0" />}
@@ -113,7 +109,6 @@ export function CodeExporter({ t, selectedFile, setSelectedFile, copied, handleC
               )}
             </div>
 
-            {/* Folder 4: nest-notification */}
             <div className="space-y-1">
               <div onClick={() => toggleDirectory('notification')} className="flex items-center space-x-2 p-1.5 hover:bg-slate-900 rounded cursor-pointer text-slate-300 font-semibold">
                 {openDirs['notification'] ? <FolderOpen className="w-4 h-4 text-amber-400 shrink-0" /> : <Folder className="w-4 h-4 text-amber-400 shrink-0" />}
@@ -140,13 +135,11 @@ export function CodeExporter({ t, selectedFile, setSelectedFile, copied, handleC
           </div>
         </div>
 
-        {/* Sidebar Info Banner */}
         <div className="mt-5 pt-4 border-t border-slate-800 text-[11px] text-slate-500 font-sans leading-normal">
           This explorer replicates clean modular enterprise architecture. Check each file path above to view active Nest.js decorators.
         </div>
       </div>
 
-      {/* 2.2 CODE BLOCK WRAP SCREEN */}
       <div className="lg:col-span-8 bg-[#0D111A] rounded-xl overflow-hidden shadow-xl border border-slate-800 flex flex-col">
         <div className="bg-[#05060A]/80 border-b border-slate-800/85 px-4 py-2.5 flex items-center justify-between">
           <div className="flex items-center space-x-1.5 font-mono text-xs text-slate-350 select-none">

@@ -32,19 +32,15 @@ export function TelegramPhoneOverlay({ t, messages }: TelegramPhoneOverlayProps)
       </div>
 
       <div className="md:col-span-5 flex justify-center">
-        {/* PHYSICAL DEVICE BODY MOCKUP */}
         <div className="relative w-[300px] h-[480px] bg-slate-900 rounded-[36px] shadow-2xl overflow-hidden border-[8px] border-slate-950">
-          {/* Top Speaker Notch Ear Piece and Camera Lens */}
           <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-6 bg-slate-950 rounded-b-xl z-20 flex items-center justify-around px-4">
             <div className="w-12 h-1 bg-slate-800 rounded-full"></div>
             <div className="w-2.5 h-2.5 bg-slate-900 rounded-full border border-slate-800"></div>
           </div>
 
           <div className="h-full bg-slate-950 p-4 pt-8 flex flex-col justify-between overflow-hidden relative">
-            {/* Screen background texture / accent glow */}
             <div className="absolute top-1/4 right-5 w-48 h-48 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
 
-            {/* Carrier, Signal bars and Battery Header */}
             <div className="relative z-10 flex items-center justify-between text-slate-500 text-[8.5px] font-mono tracking-wide mb-1 select-none border-b border-slate-900 pb-1.5 px-1">
               <span>RMQ Cellular</span>
               <div className="flex items-center space-x-1">
@@ -59,7 +55,6 @@ export function TelegramPhoneOverlay({ t, messages }: TelegramPhoneOverlayProps)
               </div>
             </div>
 
-            {/* Simulated Chat Window Wrapper */}
             <div className="relative z-10 flex-1 overflow-y-auto space-y-2 pr-1 pt-1 flex flex-col justify-end w-full custom-scrollbar">
               {phoneMessages.length === 0 ? (
                 <p className="text-slate-505 text-slate-500 italic text-center py-10 text-[11px] font-sans my-auto leading-relaxed">{t.phoneBotAwaiting}</p>
@@ -87,7 +82,6 @@ export function TelegramPhoneOverlay({ t, messages }: TelegramPhoneOverlayProps)
               )}
             </div>
 
-            {/* Bottom Phone Bar */}
             <div className="relative z-10 pt-2 border-t border-slate-800/80 mt-2 flex items-center justify-between">
               <div className="text-[9px] bg-[#05060A] border border-slate-800/80 text-slate-400 rounded-full w-full py-1 px-3 text-center font-mono">{t.phoneReadOnlyConsole}</div>
             </div>

@@ -10,7 +10,6 @@ interface DocDetailsProps {
 export function DocDetails({ t, setActiveTab }: DocDetailsProps) {
   return (
     <div className="space-y-8 text-left font-sans">
-      {/* SIGNATURE CORAL CARD FOR HIGH-VOLTAGE ARCHITECTURE */}
       <div className="p-8 rounded-xl bg-[#aa2d00] text-white flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-md">
         <div className="space-y-2 max-w-2xl">
           <div className="inline-flex items-center space-x-1.5 bg-white/20 px-3 py-1 rounded-full text-xs font-bold tracking-wide">
@@ -28,7 +27,6 @@ export function DocDetails({ t, setActiveTab }: DocDetailsProps) {
         </button>
       </div>
 
-      {/* DETAILED INFO GRIDS */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
         <div className="bg-[#0D111A] border border-slate-800 rounded-xl p-6 space-y-4 shadow-xl">
           <h3 className="text-lg font-semibold flex items-center space-x-2 text-white">
@@ -75,7 +73,6 @@ export function DocDetails({ t, setActiveTab }: DocDetailsProps) {
         </div>
       </div>
 
-      {/* DOCKER COMPOSE CONFIG GUIDE */}
       <div className="bg-[#0D111A] border border-slate-800 rounded-xl p-6 space-y-4 shadow-xl">
         <h3 className="text-lg font-semibold flex items-center space-x-2 text-white">
           <Layers className="w-5 h-5 text-[#fcab79]" />

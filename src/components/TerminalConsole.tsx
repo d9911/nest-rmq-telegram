@@ -22,14 +22,12 @@ export function TerminalConsole({ t, logs, onClearLogs, scrollRef }: TerminalCon
 
   return (
     <div className="bg-[#05060A]/95 rounded-xl overflow-hidden shadow-2xl border border-slate-800/80">
-      {/* Top Header tab bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between bg-[#0e121e] border-b border-slate-800 p-3 sm:px-4 gap-2">
         <div className="flex items-center space-x-2">
           <Terminal className="w-4 h-5 text-indigo-400" />
           <span className="text-xs font-bold uppercase tracking-wider text-slate-200 font-mono">{t.stdoutTitle}</span>
         </div>
 
-        {/* Filtering service selector */}
         <div className="flex flex-wrap items-center gap-1">
           {(['all', 'Producer', 'Broker', 'Consumer', 'Notification'] as const).map((serviceName) => (
             <button
@@ -53,7 +51,6 @@ export function TerminalConsole({ t, logs, onClearLogs, scrollRef }: TerminalCon
         </div>
       </div>
 
-      {/* Actual Logs Output Viewport */}
       <div ref={scrollRef} className="p-4 font-mono text-[11px] leading-relaxed h-[240px] overflow-y-auto space-y-2 text-slate-400 custom-scrollbar">
         {filteredLogs.length === 0 ? (
           <p className="text-slate-505 text-slate-500 italic text-center py-10 font-sans">{t.stdoutEmpty}</p>
@@ -93,7 +90,6 @@ export function TerminalConsole({ t, logs, onClearLogs, scrollRef }: TerminalCon
         )}
       </div>
 
-      {/* Terminal Footer */}
       <div className="bg-[#0e121e] border-t border-slate-800/80 px-4 py-2 flex items-center justify-between text-[10px] font-mono text-slate-500">
         <div className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
